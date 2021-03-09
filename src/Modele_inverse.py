@@ -15,7 +15,7 @@ class angle:
         AM = math.sqrt(z**2 + (math.sqrt(x**2 + y**2) - self.l0**2)**2)
         try :
             a = math.pi + \
-                math.asin(z / AM) - \
+                math.asin( - z / AM) - \
                 math.acos((self.l1**2 - self.l2**2 +  AM**2) / (2*self.l1 * AM))
         except :
             print("position impossible sur theta_1, returning -1")
@@ -30,6 +30,3 @@ class angle:
 
     def angle_to(self, x, y, z):
         return self.theta_0(x,y,z), self.theta_1(x,y,z), self.theta_2(x,y,z)
-
-a = angle(1,1,1)
-print(a.angle_to(2,0,-1))
