@@ -136,7 +136,7 @@ def draw(t):
     - Entrée: t, le temps (secondes écoulées depuis le début)
     - Sortie: un tableau contenant les 3 positions angulaires cibles (en radians)
     """
-    
+
     return inverse(x, y, z)
 
 def legs(leg1, leg2, leg3, leg4):
@@ -182,7 +182,6 @@ def legs(leg1, leg2, leg3, leg4):
     temp_x, temp_y, temp_z = inverse_tuple_rotation_translation(leg4, -np.pi/4, -1, -1)
     targets[9:] = [temp_x, temp_y, temp_z]
 
-    print(targets)
     return targets
 
 def walk(t, speed_x, speed_y, speed_rotation):
