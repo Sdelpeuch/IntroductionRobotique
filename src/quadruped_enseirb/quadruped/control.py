@@ -197,6 +197,8 @@ def walk(t, speed_x, speed_y, speed_rotation):
     """
     targets = [0]*12
 
+    targets = legs((-0.120, 0.120, -0.05), (-0.120, -0.120, -0.05), (0.120, -0.120, -0.05), (0.120, 0.120, -0.05))
+
     return targets
 
 if __name__ == "__main__":
