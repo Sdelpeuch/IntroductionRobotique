@@ -118,6 +118,13 @@ def inverse(x, y, z):
     return [theta0, theta1, theta2]
 
 def draw(t):
+    interpolator = interpolation.LinearSpline3D()
+    interpolator.add_entry(0,0.05,0,0)
+    interpolator.add_entry(1,0.05,0,0.1)
+    interpolator.add_entry(2, 0.05, 0.1, 0.1)
+    interpolator.add_entry(3, 0.05, 0, 0)
+    x, y, z = interpolator.interpolate(t%3)
+
     """
     python simulator.py -m draw
 
@@ -130,7 +137,7 @@ def draw(t):
     - Sortie: un tableau contenant les 3 positions angulaires cibles (en radians)
     """
 
-    return [0., np.sin(t)*0.3, 0.]
+    return inverse(x, y, z)
 
 def legs(leg1, leg2, leg3, leg4):
     """
