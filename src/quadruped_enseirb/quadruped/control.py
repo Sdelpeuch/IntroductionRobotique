@@ -104,7 +104,7 @@ def inverse(x, y, z):
     - Sortie: un tableau contenant les 3 positions angulaires cibles (en radians)
     """
 
-    side = -1
+    side = 1
 
     theta0 = math.atan2(y, x)
     AH = math.sqrt(x**2 + y**2) - l0
@@ -130,6 +130,7 @@ def draw(t):
     - Sortie: un tableau contenant les 3 positions angulaires cibles (en radians)
     """
 
+
     return [0., np.sin(t)*0.3, 0.]
 
 def legs(leg1, leg2, leg3, leg4):
@@ -142,9 +143,40 @@ def legs(leg1, leg2, leg3, leg4):
     - Entrée: des positions cibles (tuples (x, y, z)) pour le bout des 4 pattes
     - Sortie: un tableau contenant les 12 positions angulaires cibles (radian) pour les moteurs
     """
-
     targets = [0]*12
+    offset = math.sqrt(0.040*0.040/2)
 
+    def rotation(t, x, y):
+        return np.dot(np.array([[np.cos(t), -np.sin(t)], [np.sin(t), np.cos(t)]]), np.array([[x],[y]]))
+
+    def inverse_tuple_rotation_translation(my_tuple, t, x, y):
+        x_ = my_tuple[0]
+        y_ = my_tuple[1]
+        z_ = my_tuple[2]
+
+        # translation
+        x_ += x * offset
+        y_ += y * offset
+
+        # rotation
+        [x_, y_] = rotation(t, x_, y_)
+
+        return inverse(x_, y_, z_)
+    
+    # Patte 1 +x,+y
+    temp_x, temp_y, temp_z = inverse_tuple_rotation_translation(leg1, - 3 * np.pi/4, 1, -1)
+    targets[0:2] = [temp_x, temp_y, temp_z]
+    # Patte 2 +x,+y
+    temp_x, temp_y, temp_z = inverse_tuple_rotation_translation(leg2, 3 * np.pi/4, 1, 1)
+    targets[3:5] = [temp_x, temp_y, temp_z]
+    # Patte 3 +x,+y
+    temp_x, temp_y, temp_z = inverse_tuple_rotation_translation(leg3, np.pi/4, -1, 1)
+    targets[6:8] = [temp_x, temp_y, temp_z]
+    # Patte 4 +x,+y
+    temp_x, temp_y, temp_z = inverse_tuple_rotation_translation(leg4, -np.pi/4, -1, -1)
+    targets[9:] = [temp_x, temp_y, temp_z]
+
+    print(targets)
     return targets
 
 def walk(t, speed_x, speed_y, speed_rotation):
