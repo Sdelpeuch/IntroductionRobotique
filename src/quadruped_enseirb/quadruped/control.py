@@ -5,6 +5,10 @@ if __package__ is None or __package__ == '':
 else:
     from . import interpolation
 
+l0 = 0.045
+l1 = 0.065
+l2 = 0.087
+
 def sandbox(t):
     """
     python simulator.py -m sandbox
@@ -42,10 +46,6 @@ def direct(a, b, c):
     T1 = np.pi + b # Theta 1
     T2 = c + np.pi # Theta 2
 
-    l0 = 0.045
-    l1 = 0.065
-    l2 = 0.087
-
     # point O
     O = np.array([[0], [0], [0]])
     #print("O:", O)
@@ -82,6 +82,14 @@ def direct(a, b, c):
 
     return [M[0], M[1], M[2]]
 
+def alKashi(a, b, c):
+    angle = (a**2 + b**2 - c**2) / (2 * a * b)
+    if angle > 1:
+        angle = 1
+    elif angle < -1:
+        angle = -1
+    return math.acos(angle)
+
 def inverse(x, y, z):
     """
     python simulator.py -m inverse
@@ -96,7 +104,18 @@ def inverse(x, y, z):
     - Sortie: un tableau contenant les 3 positions angulaires cibles (en radians)
     """
 
-    return [0., 0., 0.]
+    side = -1
+
+    theta0 = math.atan2(y, x)
+    AH = math.sqrt(x**2 + y**2) - l0
+    AM = math.sqrt(AH**2 + z**2)
+    theta2 = side * (np.pi - alKashi(l1, l2, AM))
+
+    if (AM == 0):
+        theta1 = 0 # Peu importe
+    else:
+        theta1 = side * alKashi(AM, l1, l2) + math.atan2(z, AH)
+    return [theta0, theta1, theta2]
 
 def draw(t):
     """
