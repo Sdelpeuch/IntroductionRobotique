@@ -1,4 +1,5 @@
 import numpy as np
+import math
 if __package__ is None or __package__ == '':
     import interpolation
 else:
@@ -37,7 +38,49 @@ def direct(a, b, c):
     - Sortie: x, y, z, la position du bout de la patte
     """
 
-    return [0.3, 0., 0.]
+    T0 = a # Theta 0
+    T1 = np.pi + b # Theta 1
+    T2 = c + np.pi # Theta 2
+
+    l0 = 0.045
+    l1 = 0.065
+    l2 = 0.087
+
+    # point O
+    O = np.array([[0], [0], [0]])
+    #print("O:", O)
+
+    # point A
+    A = np.array([[l0 * math.cos(T0)], [l0 * math.sin(T0)], [0]]) + O
+    #print("A:", A)
+
+    # point B
+    def rotationZ(t):
+        return np.array([[np.cos(t), -np.sin(t), 0], [np.sin(t), np.cos(t), 0],[0, 0, 1]])
+
+    def rotationX(t):
+        return np.array([[1, 0, 0], [0, np.cos(t), -np.sin(t)],[0, np.sin(t), np.cos(t)]])
+
+    B = np.dot(rotationZ(T0), np.array([[l1 * np.cos(T1 - np.pi)], [0], [l1 * np.sin(T1 - np.pi)]])) + A
+    #print("B:", B)
+
+    # point C
+    def rotationY(t):
+        return np.array([[np.cos(t), 0, np.sin(t)], [0, 1, 0],[-np.sin(t), 0, np.cos(t)]])
+
+    # point M
+    M = np.dot(rotationZ(T0), np.dot(rotationY(np.pi-T1), np.array([[l2 * np.cos(np.pi - T2)], [0], [l2 * np.sin(np.pi - T2)]]))) + B
+    # print("M:", M)
+
+    # points = [O, A, B, M]
+
+    # X, Y, Z = np.zeros(4), np.zeros(4), np.zeros(4)
+    # for i in range(len(points)):
+    #     X[i] = points[i][0]
+    #     Y[i] = points[i][1]
+    #     Z[i] = points[i][2]
+
+    return [M[0], M[1], M[2]]
 
 def inverse(x, y, z):
     """
