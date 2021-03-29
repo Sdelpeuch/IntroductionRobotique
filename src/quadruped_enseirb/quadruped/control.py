@@ -221,8 +221,8 @@ def walk(t, speed_x, speed_y, speed_rotation):
     print("avancer_x = {0}\n avancer_y = {1}".format(avancer_x, avancer_y))
     avancer_z = 0
     if speed_x != 0 or speed_y != 0:
-        avancer_z = 0.1
-    step = int((t * 100) % 4)
+        avancer_z = 0.05
+    step = int((t * 20) % 4)
     # print("t : {0}".format(t))
 
     if step == 0:
@@ -248,7 +248,7 @@ def walk(t, speed_x, speed_y, speed_rotation):
 
         patte2 = (initiale[1][0] - avancer_x, initiale[1][1] - avancer_y, initiale[1][2])
 
-        patte3 = (initiale[2][0] + avancer_x / 2, initiale[2][0] + avancer_y / 2, initiale[2][0] - avancer_z)
+        patte3 = (initiale[2][0] + avancer_x / 2, initiale[2][1] + avancer_y / 2, initiale[2][2] - avancer_z)
 
         patte4 = (initiale[3][0] - avancer_x, initiale[3][1] - avancer_y, initiale[3][2])
 
