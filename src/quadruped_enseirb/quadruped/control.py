@@ -160,11 +160,11 @@ def step(t, patte_num, speed_x, speed_y):
 
     interpolator = interpolation.LinearSpline3D()
 
-    interpolator.add_entry(0, * initiale[patte_num])
-    interpolator.add_entry(1, * high)
-    interpolator.add_entry(2, * end)
-    interpolator.add_entry(3, * initiale[patte_num])
-    x, y, z = interpolator.interpolate(t % 3)
+    interpolator.add_entry(0.0, * initiale[patte_num])
+    interpolator.add_entry(0.5, * end)
+    interpolator.add_entry(0.75, * high)
+    interpolator.add_entry(1.0, * initiale[patte_num])
+    x, y, z = interpolator.interpolate(t % 1.0)
 
     print(t)
 
@@ -222,9 +222,9 @@ def walk_2(t, speed_x, speed_y, speed_rotation):
 
     # Déterminer la position des pattes en fonction de t
     # print("avancer_x = {0}\navancer_y = {1}".format(speed_x, speed_y))
-    patte1 = step(t+1, 0, speed_x, speed_y)
+    patte1 = step(t + 0.5, 0, speed_x, speed_y)
     patte2 = step(t, 1, speed_x, speed_y)
-    patte3 = step(t+1, 2, speed_x, speed_y)
+    patte3 = step(t + 0.5, 2, speed_x, speed_y)
     patte4 = step(t, 3, speed_x, speed_y)
 
     targets = legs(patte1, patte2, patte3, patte4)
@@ -235,7 +235,7 @@ def walk_2(t, speed_x, speed_y, speed_rotation):
         leg1.append([x1, y1, z1])
         tmp = np.array(leg1)
         plt.clf()
-        plt.plot(tmp.T[0], color = 'red')
+        plt.plot(tmp.T[0], color='red')
         plt.plot(tmp.T[1], color='green')
         plt.plot(tmp.T[2], color='blue')
         plt.grid()
