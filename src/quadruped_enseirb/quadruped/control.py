@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
 if __package__ is None or __package__ == '':
     import interpolation
@@ -194,6 +195,7 @@ def legs(leg1, leg2, leg3, leg4):
 
     return targets
 
+leg1 = []
 
 def walk(t, speed_x, speed_y, speed_rotation):
     d = 0.120
@@ -221,16 +223,16 @@ def walk(t, speed_x, speed_y, speed_rotation):
     print("avancer_x = {0}\n avancer_y = {1}".format(avancer_x, avancer_y))
     avancer_z = 0
     if speed_x != 0 or speed_y != 0:
-        avancer_z = 0.05
-    step = int((t * 20) % 4)
+        avancer_z = 0.03
+    step = int((t * 15) % 4)
     # print("t : {0}".format(t))
 
     if step == 0:
         print("step {0}".format(step))
         patte1 = (initiale[0][0] - avancer_x, initiale[0][1] - avancer_y, initiale[0][2] + 0)
-        patte2 = (initiale[1][0] + avancer_x / 2, initiale[1][1] + avancer_y / 2, initiale[1][2] - avancer_z)
+        patte2 = (initiale[1][0] + avancer_x / 2, initiale[1][1] + avancer_y / 2, initiale[1][2])
         patte3 = (initiale[2][0] - avancer_x, initiale[2][1] - avancer_y, initiale[2][2] + 0)
-        patte4 = (initiale[3][0] + avancer_x / 2, initiale[3][1] + avancer_y / 2, initiale[3][2] - avancer_z)
+        patte4 = (initiale[3][0] + avancer_x / 2, initiale[3][1] + avancer_y / 2, initiale[3][2])
 
     elif step == 1:
         print("step {0}".format(step))
@@ -241,29 +243,30 @@ def walk(t, speed_x, speed_y, speed_rotation):
 
 
     elif step == 2:
-
         # print("step {0}".format(step))
-
-        patte1 = (initiale[0][0] + avancer_x / 2, initiale[0][1] + avancer_y / 2, initiale[0][2] - avancer_z)
-
+        patte1 = (initiale[0][0] + avancer_x / 2, initiale[0][1] + avancer_y / 2, initiale[0][2])
         patte2 = (initiale[1][0] - avancer_x, initiale[1][1] - avancer_y, initiale[1][2])
-
-        patte3 = (initiale[2][0] + avancer_x / 2, initiale[2][1] + avancer_y / 2, initiale[2][2] - avancer_z)
-
+        patte3 = (initiale[2][0] + avancer_x / 2, initiale[2][1] + avancer_y / 2, initiale[2][2])
         patte4 = (initiale[3][0] - avancer_x, initiale[3][1] - avancer_y, initiale[3][2])
 
 
     else:  # step == 3
-
         # print("step {0}".format(step))
-
         patte1 = initiale[0]
-
         patte2 = (initiale[1][0] + avancer_x / 2, initiale[1][1] + avancer_y / 2, initiale[1][2] + avancer_z)
-
         patte3 = initiale[2]
-
         patte4 = (initiale[3][0] + avancer_x / 2, initiale[3][1] + avancer_y / 2, initiale[3][2] + avancer_z)
+
+    if True:
+        x1, y1, z1 = patte1
+        leg1.append([x1, y1, z1])
+        tmp = np.array(leg1)
+        plt.clf()
+        plt.plot(tmp.T[0], color = 'red')
+        plt.plot(tmp.T[1], color='green')
+        plt.plot(tmp.T[2], color='blue')
+        plt.grid()
+        plt.pause(0.05)
 
     targets = legs(patte1, patte2, patte3, patte4)
     # print('\np1:', patte1, '\np2:', patte2, '\np3:', patte3, '\np4:', patte4)
