@@ -185,6 +185,8 @@ def legs(leg1, leg2, leg3, leg4):
     return targets
 
 def walk(t, speed_x, speed_y, speed_rotation):
+    d = 0.120
+    z0 = -0.05
     """
     python simulator.py -m walk
 
@@ -196,9 +198,52 @@ def walk(t, speed_x, speed_y, speed_rotation):
     - Sortie: un tableau contenant les 12 positions angulaires cibles (radian) pour les moteurs
     """
     targets = [0]*12
+    # Position initiale
+    initiale = [(-d, d, z0), (-d, -d, z0), (d, -d, z0), (d, d, z0)]
 
-    targets = legs((-0.120, 0.120, -0.05), (-0.120, -0.120, -0.05), (0.120, -0.120, -0.05), (0.120, 0.120, -0.05))
+    if t == 0:
+        return legs(initiale[0], initiale[1], initiale[2], initiale[3])
 
+    # Déterminer la position des pattes en fonction de t
+    avancer_x = speed_x
+    avancer_y = speed_y
+    print("avancer_x = {0}\n avancer_y = {1}".format(avancer_x, avancer_y))
+    avancer_z = 0
+    if speed_x != 0 or speed_y != 0:
+        avancer_z = 0.1
+    step = int((t*1000) % 4)
+    #print("t : {0}".format(t))
+
+    if step == 0:
+        print("step {0}".format(step))
+        patte1 = initiale[0] + (-avancer_x, -avancer_y, 0)
+        patte2 = initiale[1] + (+avancer_x / 2, +avancer_y / 2, -avancer_z)
+        patte3 = initiale[2] + (-avancer_x, -avancer_y, 0)
+        patte4 = initiale[3] + (+avancer_x / 2, +avancer_y / 2, -avancer_z)
+
+    elif step == 1:
+        print("step {0}".format(step))
+        patte1= initiale[0] + (+avancer_x / 2, +avancer_y / 2, +avancer_z)
+        patte2 = initiale[1]
+        patte3 = initiale[2] + (+avancer_x / 2, +avancer_y / 2, +avancer_z)
+        patte4 = initiale[3]
+
+    elif step == 2:
+        #print("step {0}".format(step))
+        patte1 = initiale[0] + (+avancer_x / 2, +avancer_y / 2, -avancer_z)
+        patte2 = initiale[1] + (-avancer_x, -avancer_y, 0)
+        patte3 = initiale[2] + (+avancer_x / 2, +avancer_y / 2, -avancer_z)
+        patte4 = initiale[3] + (-avancer_x, -avancer_y, 0)
+
+    else: # step == 3
+        print("step {0}".format(step))
+        patte1 = initiale[0] + (0, 0, 0)
+        patte2 = initiale[1] + (+avancer_x / 2, +avancer_y / 2, +avancer_z)
+        patte3 = initiale[2] + (0, 0, 0)
+        patte4 = initiale[3] + (+avancer_x / 2, +avancer_y / 2, +avancer_z)
+
+    targets = legs(patte1, patte2, patte3, patte4)
+    #print('\np1:', patte1, '\np2:', patte2, '\np3:', patte3, '\np4:', patte4)
     return targets
 
 if __name__ == "__main__":
