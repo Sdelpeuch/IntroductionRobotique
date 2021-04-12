@@ -155,15 +155,16 @@ def step(t, patte_num, speed_x, speed_y):
     z0 = -0.05
 
     initiale = [(-d, d, z0), (-d, -d, z0), (d, -d, z0), (d, d, z0)]
+    start = (initiale[patte_num][0] + speed_x / 2, initiale[patte_num][1] + speed_y / 2, initiale[patte_num][2])
     high = (initiale[patte_num][0] + speed_x / 2, initiale[patte_num][1] + speed_y / 2, initiale[patte_num][2] + 0.05)
-    end = (initiale[patte_num][0] + speed_x / 2, initiale[patte_num][1] + speed_y / 2, initiale[patte_num][2])
+    end = (initiale[patte_num][0] - speed_x / 2, initiale[patte_num][1] - speed_y / 2, initiale[patte_num][2])
 
     interpolator = interpolation.LinearSpline3D()
 
-    interpolator.add_entry(0.0, * initiale[patte_num])
+    interpolator.add_entry(0.0, * start)
     interpolator.add_entry(0.5, * end)
     interpolator.add_entry(0.75, * high)
-    interpolator.add_entry(1.0, * initiale[patte_num])
+    interpolator.add_entry(1.0, * start)
     x, y, z = interpolator.interpolate(t % 1.0)
 
     print(t)
