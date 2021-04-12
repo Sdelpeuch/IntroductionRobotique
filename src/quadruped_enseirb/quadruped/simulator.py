@@ -126,6 +126,7 @@ if __name__ == "__main__":
         speed_y = p.addUserDebugParameter('speed_y', -0.2, 0.2, 0.)
         speed_rotation = p.addUserDebugParameter(
             'speed_rotation', -0.5, 0.5, 0.)
+        lastLines = [None, None, None, None]
     elif mode == 'sandbox':
         print('Mode bac à sable...')
 
@@ -173,6 +174,22 @@ if __name__ == "__main__":
             y = p.readUserDebugParameter(speed_y)
             rotation = p.readUserDebugParameter(speed_rotation)
             joints = control.walk(t, x, y, rotation)
+
+            def getLegTip(patte):
+                res = p.getLinkState(robot, patte)
+                return res[0]
+            colors = [(1., 0, 0), (0, 1., 0), (0, 0, 1.), (0.5, 0, 0.5)]
+            legs = [2, 14, 7, 11]
+            for j in range(4):
+                i = legs[j]
+                if lastLines[j] is None:
+                    lastLines[j] = time.time(), getLegTip(i)
+                elif time.time() - lastLines[j][0] > 0.1:
+                    tip = getLegTip(i)
+                    p.addUserDebugLine(lastLines[j][1], tip, colors[j], 1., 10.)
+                    lastLines[j] = time.time(), tip
+            print(lastLines)
+
         elif mode == 'sandbox':
             joints = control.sandbox(t)
 
