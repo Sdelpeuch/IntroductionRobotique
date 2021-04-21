@@ -77,7 +77,12 @@ def legs(leg1, leg2, leg3, leg4, leg5, leg6):
 
 def alKashi(a, b, c):
     """
-    Pour un triangle de longueurs a, b, c, donne l'angle bca 
+     A
+     |     b
+    c|
+     |__________
+     B    a     C
+    Pour un triangle de longueurs a, b, c, donne l'angle BCA
     """
     angle = (a**2 + b**2 - c**2) / (2 * a * b)
     if angle > 1:
@@ -93,21 +98,22 @@ def computeIK(x, y, z, verbose=True, use_rads=True):
     # T2    t - pi, t + pi, pi - t
     # T3    t - pi, t + pi, pi - t
 
-    theta1 = constants.THETA1_MOTOR_SIGN * math.atan2(y, x)
+    theta1 = constants.THETA1_MOTOR_SIGN * math.atan2(y, x) # OK
 
     AH = math.sqrt(x**2 + y**2) - constants.constL1
     AM = math.sqrt(AH**2 + z**2)
-    theta3 = constants.THETA3_MOTOR_SIGN * alKashi(constants.constL3, constants.constL2, AM) - constants.theta3Correction
 
-    if (AM == 0):
-        theta2 = 0  # Peu importe
-    else:
-        theta2 = constants.THETA2_MOTOR_SIGN * (alKashi(AM, constants.constL2, constants.constL3) + math.atan2(z, AH)) + constants.theta2Correction
+    theta2 = constants.THETA2_MOTOR_SIGN * alKashi(AM, constants.constL2, constants.constL3) + math.atan2(z, AH)
     
-    if False: #postion de debug
-        return [0, constants.theta2Correction, - constants.theta3Correction] # bras allongé = 0, t2corr, -t3corr
 
-    return [theta1, theta2, theta3]
+    theta3 = constants.THETA3_MOTOR_SIGN * (alKashi(constants.constL3, constants.constL2, AM)) 
+
+
+    if False: #postion de debug
+        return [0, constants.THETA2_MOTOR_SIGN * constants.theta2Correction, constants.THETA3_MOTOR_SIGN * constants.theta3Correction] # bras allongé = 0, t2corr, -t3corr
+
+
+    return [theta1, theta2 + constants.theta2Correction, theta3 - constants.theta3Correction]
 
 
 def computeDKDetailed(a, b, c, use_rads=True):
@@ -126,16 +132,16 @@ def computeDKDetailed(a, b, c, use_rads=True):
     - Sortie: [x, y, z] x 4 les positions des points O, A, B et M
     """
 
-    T0 = a * constants.THETA1_MOTOR_SIGN  # Theta 1
-    T1 = b * constants.THETA2_MOTOR_SIGN - constants.theta2Correction  # Theta 2
-    T2 = c * constants.THETA3_MOTOR_SIGN - constants.theta3Correction  # Theta 3
+    T1 = a * constants.THETA1_MOTOR_SIGN  # Theta 1
+    T2 = b * constants.THETA2_MOTOR_SIGN - constants.theta2Correction  # Theta 2
+    T3 = c * constants.THETA3_MOTOR_SIGN - constants.theta3Correction  # Theta 3
 
-    # point O
-    O = np.array([[0], [0], [0]])
+    # point Origine
+    Origine = np.array([[0], [0], [0]])
     # print("O:", O)
 
     # point A
-    A = np.array([[constants.constL1 * math.cos(T0)], [constants.constL1 * math.sin(T0)], [0]]) + O
+    A = np.array([[constants.constL1 * math.cos(T1)], [constants.constL1 * math.sin(T1)], [0]]) + Origine
     #print("A:", A)
 
 
@@ -143,7 +149,7 @@ def computeDKDetailed(a, b, c, use_rads=True):
     def rotationZ(t):
         return np.array([[np.cos(t), -np.sin(t), 0], [np.sin(t), np.cos(t), 0], [0, 0, 1]])
 
-    B = np.dot(rotationZ(T0), np.array([[constants.constL2 * np.cos(-T1)], [0], [constants.constL2 * np.sin(-T1)]])) + A
+    B = np.dot(rotationZ(T1), np.array([[constants.constL2 * np.cos(-T2)], [0], [constants.constL2 * np.sin(-T2)]])) + A
     #print("B:", B)
 
 
@@ -151,14 +157,14 @@ def computeDKDetailed(a, b, c, use_rads=True):
         return np.array([[np.cos(t), 0, np.sin(t)], [0, 1, 0], [-np.sin(t), 0, np.cos(t)]])
 
     # point M
-    M = np.dot(rotationZ(T0), np.dot(rotationY(T1 + np.pi),
-        np.array([[constants.constL3 * np.cos(np.pi - T2)], [0], [constants.constL3 * np.sin(np.pi - T2)]]))) + B
+    M = np.dot(rotationZ(T1), np.dot(rotationY(T2 + np.pi),
+        np.array([[constants.constL3 * np.cos(np.pi - T3)], [0], [constants.constL3 * np.sin(np.pi - T3)]]))) + B
     #print("M:", M)
 
     def flat(regular_list):
         return [item for sublist in regular_list for item in sublist]
 
-    O_flat = flat(O)
+    O_flat = flat(Origine)
     A_flat = flat(A)
     B_flat = flat(B)
     M_flat = flat(M)

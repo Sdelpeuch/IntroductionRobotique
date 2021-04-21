@@ -103,7 +103,7 @@ elif args.mode == "direct":
 elif args.mode == "inverse":
     cross = p.loadURDF("target2/robot.urdf")
     # Use your own DK function
-    alphas = kinematics.computeDK(0, 0, 0, use_rads=True)
+    alphas = kinematics.computeDK(0, 0, 0, use_rads=True) # [0, constants.THETA2_MOTOR_SIGN * constants.theta2Correction, constants.THETA3_MOTOR_SIGN * constants.theta3Correction]
     controls["target_x"] = p.addUserDebugParameter("target_x", -0.4, 0.4, alphas[0])
     controls["target_y"] = p.addUserDebugParameter("target_y", -0.4, 0.4, alphas[1])
     controls["target_z"] = p.addUserDebugParameter("target_z", -0.4, 0.4, alphas[2])
