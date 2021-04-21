@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as R
 import math
 
-from constants import constL1, constL2, constL3, LEG_CENTER_POS
+import constants
+
 
 def inverse(x, y, z, verbose=True, use_rads=True):
     """
@@ -17,18 +18,18 @@ def inverse(x, y, z, verbose=True, use_rads=True):
 
     Theta0 = np.arctan2(y,x)
 
-    AH = np.sqrt(x**2+y**2) - constL1
-    AC = np.sqrt(AH**2+z**2)
+    AH = np.sqrt(x**2 + y**2) - constants.constL1
+    AC = np.sqrt(AH**2 + z**2)
     
-    Theta2 = np.pi - np.arccos((constL2**2 + constL3**2 - AC**2) / (2*constL2*constL3))
+    Theta2 = np.pi - np.arccos((constants.constL2**2 + constants.constL3**2 - AC**2) / (2 * constants.constL2 * constants.constL3))
 
-    var = (AC**2 + constL2**2 - constL3**2) / (2*AC*constL2)
+    var = (AC**2 + constants.constL2**2 - constants.constL3**2) / (2 * AC * constants.constL2)
     if -1 <= var <= 1 :
         CAB = np.arccos(var)
     else : 
         return [0., 0., 0.]
 
-    CAH = np.arcsin(z/AC)
+    CAH = np.arcsin( z/AC )
 
     Theta1 = (CAB + CAH)
 
@@ -59,7 +60,7 @@ def legs(leg1, leg2, leg3, leg4, leg5, leg6):
 
     legs = [leg1, leg2, leg3, leg4, leg5, leg6]
     angles = [0, 0, np.pi/2, np.pi, np.pi, -np.pi/2]
-    rots = [R.from_rotvec(a * np.array([0,0,1])).as_matrix() for a in angles]
+    rots = [R.from_rotvec(a * np.array([0, 0, 1])).as_matrix() for a in angles]
     
     for i, leg in enumerate(legs):
         leg -= LEG_CENTER_POS[i] # offset
@@ -75,7 +76,7 @@ def legs(leg1, leg2, leg3, leg4, leg5, leg6):
 
 
 def alKashi(a, b, c):
-    angle = (a ** 2 + b ** 2 - c ** 2) / (2 * a * b)
+    angle = (a**2 + b**2 - c**2) / (2 * a * b)
     if angle > 1:
         angle = 1
     elif angle < -1:
@@ -85,18 +86,24 @@ def alKashi(a, b, c):
 
 def computeIK(x, y, z, verbose=True, use_rads=True):
     side = 1
+    z = constants.Z_DIRECTION * z
+    print(x, y, z)
+    # T2    t - pi, t + pi, pi - t
+    # T3    t - pi, t + pi, pi - t
 
-    theta1 = math.atan2(y, x)
-    AH = math.sqrt(x ** 2 + y ** 2) - constants.constL1
-    AM = math.sqrt(AH ** 2 + z ** 2)
-    theta3 = side * (np.pi - alKashi(constants.constL2, constants.constL3, AM))
+
+    theta1 = constants.THETA1_MOTOR_SIGN * math.atan2(y, x)
+
+    AH = math.sqrt(x**2 + y**2) - constants.constL1
+    AM = math.sqrt(AH**2 + z**2)
+    theta3 = (constants.theta3Correction - constants.THETA3_MOTOR_SIGN * (alKashi(constants.constL2, constants.constL3, AM)))
 
     if (AM == 0):
         theta2 = 0  # Peu importe
     else:
-        theta2 = side * alKashi(AM, constants.constL2, constants.constL3) + math.atan2(z, AH)
-    return [theta1, theta2,
-            theta3]
+        theta2 = - (constants.theta2Correction + constants.THETA2_MOTOR_SIGN * alKashi(AM, constants.constL2, constants.constL3) + math.atan2(z, AH))
+    
+    return [theta1, theta2, theta3]
 
 
 def computeDK(a, b, c, use_rads=True):
@@ -123,6 +130,7 @@ def computeDK(a, b, c, use_rads=True):
 
     # point A
     A = np.array([[constants.constL1 * math.cos(T0)], [constants.constL1 * math.sin(T0)], [0]]) + O
+    print("A:", A)
 
     # print("A:", A)
 
@@ -135,7 +143,7 @@ def computeDK(a, b, c, use_rads=True):
 
     B = np.dot(rotationZ(T0),
                np.array([[constants.constL2 * np.cos(T1 - np.pi)], [0], [constants.constL2 * np.sin(T1 - np.pi)]])) + A
-
+    print("B:", B)
     # print("B:", B)
 
     # point C
@@ -146,5 +154,12 @@ def computeDK(a, b, c, use_rads=True):
     M = np.dot(rotationZ(T0),
                np.dot(rotationY(np.pi - T1), np.array(
                    [[constants.constL3 * np.cos(np.pi - T2)], [0], [constants.constL3 * np.sin(np.pi - T2)]]))) + B
+    print("M:", M)
+    return M
 
-    return [(0,0,0), M]
+def rotaton_2D(x, y, z, leg_angle):
+    def rotation2D(angle):
+        return np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
+    xy = np.array([[x], [y]])
+    xy = np.dot(rotation2D(leg_angle), xy)
+    return [xy[0], xy[1], z]
