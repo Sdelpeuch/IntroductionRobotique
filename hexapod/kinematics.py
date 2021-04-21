@@ -91,9 +91,22 @@ def alKashi(a, b, c):
         angle = -1
     return math.acos(angle)
 
+def computeIK_test(x, y, z, verbose=True, use_rads=True):
+    z = constants.Z_DIRECTION * z
+    theta1 = constants.THETA1_MOTOR_SIGN * math.atan2(y, x) # OK
+    AH = math.sqrt(x ** 2 + y ** 2) - constants.constL1
+    AM = math.sqrt(AH ** 2 + z ** 2)
+    theta2 = math.atan2(z, AH) - alKashi(constants.constL2, AM, constants.constL3)
+    theta3 = math.atan2(AH, z) - alKashi(constants.constL3, AM, constants.constL2)
+    return [theta1*constants.THETA1_MOTOR_SIGN,
+            theta2 - constants.THETA2_MOTOR_SIGN * constants.theta2Correction,
+            theta3 + constants.THETA3_MOTOR_SIGN * constants.theta3Correction]
 
 def computeIK(x, y, z, verbose=True, use_rads=True):
-
+    # return [0,
+    #         0 + constants.THETA2_MOTOR_SIGN * constants.theta2Correction,
+    #         0 + constants.THETA3_MOTOR_SIGN * constants.theta3Correction]
+    return computeIK_test(0.26, 0, 0, verbose, use_rads)
     z = constants.Z_DIRECTION * z
     # T2    t - pi, t + pi, pi - t
     # T3    t - pi, t + pi, pi - t
