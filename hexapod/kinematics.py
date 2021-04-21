@@ -88,7 +88,7 @@ def alKashi(a, b, c):
 
 
 def computeIK(x, y, z, verbose=True, use_rads=True):
-    side = 1
+
     z = constants.Z_DIRECTION * z
     # T2    t - pi, t + pi, pi - t
     # T3    t - pi, t + pi, pi - t
@@ -118,10 +118,12 @@ def computeDKDetailed(a, b, c, use_rads=True):
 
     Reçoit en argument les angles des moteurs (a, b, c) et retourne la position du bout
     de la patte (x, y, z)
+    
+    L'offset de l'épaule se fera après cette fonction.
 
     - Sliders: angles des trois moteurs de la patte
     - Entrée: a, b, c, angles des trois moteurs
-    - Sortie: x, y, z, la position du bout de la patte
+    - Sortie: [x, y, z] x 4 les positions des points O, A, B et M
     """
 
     T0 = a * constants.THETA1_MOTOR_SIGN  # Theta 1
@@ -140,9 +142,6 @@ def computeDKDetailed(a, b, c, use_rads=True):
     # point B
     def rotationZ(t):
         return np.array([[np.cos(t), -np.sin(t), 0], [np.sin(t), np.cos(t), 0], [0, 0, 1]])
-
-    def rotationX(t):
-        return np.array([[1, 0, 0], [0, np.cos(t), -np.sin(t)], [0, np.sin(t), np.cos(t)]])
 
     B = np.dot(rotationZ(T0), np.array([[constants.constL2 * np.cos(-T1)], [0], [constants.constL2 * np.sin(-T1)]])) + A
     #print("B:", B)
@@ -164,6 +163,13 @@ def computeDKDetailed(a, b, c, use_rads=True):
     B_flat = flat(B)
     M_flat = flat(M)
     return [O_flat, A_flat, B_flat, M_flat]
+
+def computeDK(a, b, c, use_rads=True):
+    """
+    Ne retourne que la postion du point M, le bout de la patte.
+    Cf computeDKDetailed pour plus de détails
+    """
+    return computeDKDetailed(a, b, c, use_rads)[-1]
 
 
 def rotaton_2D(x, y, z, leg_angle):
