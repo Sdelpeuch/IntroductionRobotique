@@ -13,6 +13,14 @@ import os
 
 # import display
 
+def initialization():
+    import pypot.dynamixel
+    ports = pypot.dynamixel.get_available_ports()
+    dxl_io = pypot.dynamixel.DxlIO(ports[0], baudrate=1000000)
+    print("Coucou c'est Tripode l'hexapode !")
+    dxl_io.set_goal_position(
+        {32: -20, 52: -20, 33: -20, 53: -20, 31: -30, 51: 30, 11: 0, 12: -20, 13: -20, 61: -30, 62: -30, 63: -20,
+         21: 30, 22: -20, 23: -20, 41: 00, 42: -20, 43: -20})
 
 def main():
     ports = pypot.dynamixel.get_available_ports()
@@ -68,5 +76,5 @@ def main():
 
 
 print("A new day dawns")
-main()
+initialization()
 print("Done !")
