@@ -76,6 +76,9 @@ def legs(leg1, leg2, leg3, leg4, leg5, leg6):
 
 
 def alKashi(a, b, c):
+    """
+    Pour un triangle de longueurs a, b, c, donne l'angle bca 
+    """
     angle = (a**2 + b**2 - c**2) / (2 * a * b)
     if angle > 1:
         angle = 1
@@ -87,28 +90,29 @@ def alKashi(a, b, c):
 def computeIK(x, y, z, verbose=True, use_rads=True):
     side = 1
     z = constants.Z_DIRECTION * z
-    print(x, y, z)
     # T2    t - pi, t + pi, pi - t
     # T3    t - pi, t + pi, pi - t
-
 
     theta1 = constants.THETA1_MOTOR_SIGN * math.atan2(y, x)
 
     AH = math.sqrt(x**2 + y**2) - constants.constL1
     AM = math.sqrt(AH**2 + z**2)
-    theta3 = (constants.theta3Correction - constants.THETA3_MOTOR_SIGN * (alKashi(constants.constL2, constants.constL3, AM)))
+    theta3 = constants.THETA3_MOTOR_SIGN * alKashi(constants.constL3, constants.constL2, AM) - constants.theta3Correction
 
     if (AM == 0):
         theta2 = 0  # Peu importe
     else:
-        theta2 = - (constants.theta2Correction + constants.THETA2_MOTOR_SIGN * alKashi(AM, constants.constL2, constants.constL3) + math.atan2(z, AH))
+        theta2 = constants.THETA2_MOTOR_SIGN * (alKashi(AM, constants.constL2, constants.constL3) + math.atan2(z, AH)) + constants.theta2Correction
     
+    if False: #postion de debug
+        return [0, constants.theta2Correction, - constants.theta3Correction] # bras allongé = 0, t2corr, -t3corr
+
     return [theta1, theta2, theta3]
 
 
-def computeDK(a, b, c, use_rads=True):
+def computeDKDetailed(a, b, c, use_rads=True):
     """
-    python simulator.py -m direct
+    python sim_hexa.py -m frozen-direct
 
     Le robot est figé en l'air, on ne contrôle qu'une patte
 
@@ -130,9 +134,8 @@ def computeDK(a, b, c, use_rads=True):
 
     # point A
     A = np.array([[constants.constL1 * math.cos(T0)], [constants.constL1 * math.sin(T0)], [0]]) + O
-    print("A:", A)
+    #print("A:", A)
 
-    # print("A:", A)
 
     # point B
     def rotationZ(t):
@@ -141,21 +144,27 @@ def computeDK(a, b, c, use_rads=True):
     def rotationX(t):
         return np.array([[1, 0, 0], [0, np.cos(t), -np.sin(t)], [0, np.sin(t), np.cos(t)]])
 
-    B = np.dot(rotationZ(T0),
-               np.array([[constants.constL2 * np.cos(T1 - np.pi)], [0], [constants.constL2 * np.sin(T1 - np.pi)]])) + A
-    print("B:", B)
-    # print("B:", B)
+    B = np.dot(rotationZ(T0), np.array([[constants.constL2 * np.cos(-T1)], [0], [constants.constL2 * np.sin(-T1)]])) + A
+    #print("B:", B)
 
-    # point C
+
     def rotationY(t):
         return np.array([[np.cos(t), 0, np.sin(t)], [0, 1, 0], [-np.sin(t), 0, np.cos(t)]])
 
     # point M
-    M = np.dot(rotationZ(T0),
-               np.dot(rotationY(np.pi - T1), np.array(
-                   [[constants.constL3 * np.cos(np.pi - T2)], [0], [constants.constL3 * np.sin(np.pi - T2)]]))) + B
-    print("M:", M)
-    return M
+    M = np.dot(rotationZ(T0), np.dot(rotationY(T1 + np.pi),
+        np.array([[constants.constL3 * np.cos(np.pi - T2)], [0], [constants.constL3 * np.sin(np.pi - T2)]]))) + B
+    #print("M:", M)
+
+    def flat(regular_list):
+        return [item for sublist in regular_list for item in sublist]
+
+    O_flat = flat(O)
+    A_flat = flat(A)
+    B_flat = flat(B)
+    M_flat = flat(M)
+    return [O_flat, A_flat, B_flat, M_flat]
+
 
 def rotaton_2D(x, y, z, leg_angle):
     def rotation2D(angle):

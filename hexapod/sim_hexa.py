@@ -124,25 +124,28 @@ while True:
             targets["j_tibia_rf"],
             use_rads=True,
         )
+        
+        # points = LEG_CENTER_POS # --> met une croix sur les 6 épaules (mettre leg_angle à 0)
         i = -1
         T = []
+        print("#####")
         for pt in points:
             # Drawing each step of the DK calculation
             i += 1
-            T.append(kinematics.rotaton_2D(pt[0], pt[1], pt[2], leg_angle))
-            T[-1][0] += leg_center_pos[0]
+            T.append(kinematics.rotaton_2D(pt[0], pt[1] , pt[2], leg_angle))
+            T[-1][0] += leg_center_pos[0] # Ajout l'offset de l'épaule
             T[-1][1] += leg_center_pos[1]
             T[-1][2] += leg_center_pos[2]
-            # print("Drawing cross {} at {}".format(i, T))
+            print("Drawing cross {} at {}".format(i, T[-1]))
             p.resetBasePositionAndOrientation(
                 crosses[i], T[-1], to_pybullet_quaternion(0, 0, leg_angle)
             )
-
         sim.setRobotPose(
-            leg_center_pos,
+            [0, 0, 0.5],
             to_pybullet_quaternion(0, 0, 0),
         )
         state = sim.setJoints(targets)
+
     elif args.mode == "direct":
 
         for name in controls.keys():
