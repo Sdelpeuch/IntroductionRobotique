@@ -92,6 +92,7 @@ if args.mode == "frozen-direct":
         crosses.append(p.loadURDF("target2/robot.urdf"))
     for name in sim.getJoints():
         print(name)
+        
         if "c1" in name or "thigh" in name or "tibia" in name:
             controls[name] = p.addUserDebugParameter(name, -math.pi, math.pi, 0)
 elif args.mode == "direct":
