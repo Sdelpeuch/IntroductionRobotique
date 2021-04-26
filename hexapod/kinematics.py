@@ -172,8 +172,8 @@ def computeIK(
 
     # Knowing l2, l3 and d, theta1 and theta2 can be computed using the Al Kashi law
     # There are 2 solutions for most of the points, forcing a convention here
-    theta2 = alKashiProf(l2, d, l3, sign=sign) - constants.Z_DIRECTION * math.atan2(z, xp)
-    theta3 = math.pi + alKashiProf(l2, l3, d, sign=sign)
+    theta2 = alKashi(l2, d, l3, sign=sign) - constants.Z_DIRECTION * math.atan2(z, xp)
+    theta3 = math.pi + alKashi(l2, l3, d, sign=sign)
 
     if use_rads:
 
@@ -214,7 +214,9 @@ def computeIK(
     return result
 
 def computeIKNous(x, y, z, verbose=True, use_rads=True):
-
+    # return [0,
+    #         0 + constants.THETA2_MOTOR_SIGN * constants.theta2Correction,
+    #         0 + constants.THETA3_MOTOR_SIGN * constants.theta3Correction]
     z = constants.Z_DIRECTION * z
     # T2    t - pi, t + pi, pi - t
     # T3    t - pi, t + pi, pi - t
