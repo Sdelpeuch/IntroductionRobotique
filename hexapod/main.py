@@ -6,11 +6,12 @@ import time
 
 # from kinematics import *
 import math
+import mouse
 import sys
 from signal import signal, SIGINT
 import traceback
 import os
-
+import numpy as np
 # import display
 
 def main():
@@ -48,18 +49,20 @@ def main():
         )
 
         print("Setting initial position")
-        for _ in range(10):
-            for k, v in robot.legs.items():
-                # Setting 0 s the goal position for each motor (such sadness! When we could be using the glorious inverse kinematics!)
-                v[0].goal_position = 20
-                v[1].goal_position = -10
-                v[2].goal_position = 0
-            robot.smooth_tick_read_and_write(3, verbose=False)
-            for k,v in robot.legs.items():
-                v[0].goal_position = -20
-                v[1].goal_position = 10
-                v[2].goal_position = 10
-            robot.smooth_tick_read_and_write(3, verbose=False)
+        
+        while True:
+            alphas = mouse.mouseRobot(params)
+            for key, value in robot.legs.items():
+                if key == 1 or key == 7 or key == 13 :
+                    value[0].goal_position = np.degrees(alphas[0])
+                    value[1].goal_position = -20
+                    value[2].goal_position = 0
+                else :
+                    value[0].goal_position = -np.degrees(alphas[0])
+                    value[1].goal_position = -20
+                    value[2].goal_position = 0
+            robot.smooth_tick_read_and_write(0.5, verbose=False)
+
         # TODO create this function instead:
         # setPositionToRobot(0, 0, 0, robot, params)
         print("Init position reached")

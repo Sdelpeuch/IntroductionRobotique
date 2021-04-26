@@ -1,11 +1,11 @@
 from pynput.mouse import Button, Controller
 from pynput.keyboard import Key, Listener
+import kinematics
 
 c = Controller()
 
 def getMousePosition():
-	return c.position
-
+    return c.position
 
 def mappingPad(value, v_min, v_max, new_min, new_max):
     """
@@ -17,10 +17,22 @@ def mappingPad(value, v_min, v_max, new_min, new_max):
     value = value + new_min
     return value
 
-
-def verboseMapping(v, vmin, vmax, nmin, nmax):
-    print("{} in [{}, {}] to [{}, {}] equals {}".format(v, vmin, vmax, nmin, nmax, mouse.mappingPad(v, vmin, vmax, nmin, nmax)))
-
+def mouseRobot(params):
+    mp = getMousePosition()
+    mouse_x, mouse_y = mappingPad(mp[0], 0, 768, -20, 20), mappingPad(mp[1], 0, 1366, -20, 20)
+    print(mouse_x, mouse_y)
+    
+    # Use your own IK function
+    for leg_id in range(1, 7):
+        alphas = kinematics.computeIKOriented(
+            mouse_x,
+            mouse_y,
+            -0,
+            leg_id,
+            params,
+            verbose=False,
+        )
+    return alphas
 
 # def on_press(key):
 #     print('{0} pressed'.format(

@@ -240,7 +240,7 @@ while True:
                 verbose=False,
             )
             set_leg_angles(alphas, leg_id, targets, params)
-
+        
         # sim.setRobotPose(
         #     [0, 0, 0.5],
         #     to_pybullet_quaternion(0, 0, 0),
