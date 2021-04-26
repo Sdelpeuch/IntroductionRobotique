@@ -6,7 +6,7 @@ import math
 
 import constants
 
-
+# C'est ce qu'on a fait, ça ne marche pas (à comparer pour répondre aux questions du prof)
 def inverse(x, y, z, verbose=True, use_rads=True):
     """
     Reçoit en argument une position cible (x, y, z) pour le bout de la patte, et produit les angles
@@ -16,24 +16,35 @@ def inverse(x, y, z, verbose=True, use_rads=True):
     - Sortie: un tableau contenant les 3 positions angulaires cibles (en radians)
     """
 
-    Theta0 = np.arctan2(y,x)
+    Theta1 = np.arctan2(y, x) # OK
 
-    AH = np.sqrt(x**2 + y**2) - constants.constL1
-    AC = np.sqrt(AH**2 + z**2)
+    dAP = np.sqrt(x**2 + y**2) - constants.constL1
+    d = np.sqrt(dAP**2 + z**2)
+    a = np.arctan2(z, dAP)
+
+    # --> AlKashi sur le 2eme angle
+    angle2 = (constants.constL2**2 + d**2 - constants.constL3**2) / (2 * constants.constL2 * d)
+    if angle2 > 1:
+        angle2 = 1
+    elif angle2 < -1:
+        angle2 = -1
+    b = np.arccos( angle2 )
+
+    Theta2 = a + b + constants.theta2Correction # OK
     
-    Theta2 = np.pi - np.arccos((constants.constL2**2 + constants.constL3**2 - AC**2) / (2 * constants.constL2 * constants.constL3))
+    # --> AlKashi sur le 3eme angle
+    angle3 = (constants.constL2**2 + constants.constL3**2 - d**2) / (2 * constants.constL2**2 * constants.constL3**2)
+    if angle3 > 1:
+        angle3 = 1
+    elif angle3 < -1:
+        angle3 = -1
+    Theta3 = np.pi - np.arccos( angle3 )
+    
+    Theta3 += constants.theta3Correction
 
-    var = (AC**2 + constants.constL2**2 - constants.constL3**2) / (2 * AC * constants.constL2)
-    if -1 <= var <= 1 :
-        CAB = np.arccos(var)
-    else : 
-        return [0., 0., 0.]
+    print('theta3:', Theta3, ', angle3:', angle3)
 
-    CAH = np.arcsin( z/AC )
-
-    Theta1 = (CAB + CAH)
-
-    return [Theta0, Theta1, Theta2]
+    return [Theta1, -Theta2, Theta3]
 
 
 def computeIKOriented(pos, leg_id, pos_ini, extra_theta):
@@ -75,7 +86,7 @@ def legs(leg1, leg2, leg3, leg4, leg5, leg6):
     return targets
 
 
-def alKashi(a, b, c):
+def alKashi(a, b, c, sign=-1):
     """
      A
      |     b
@@ -84,29 +95,128 @@ def alKashi(a, b, c):
      B    a     C
     Pour un triangle de longueurs a, b, c, donne l'angle BCA
     """
-    angle = (a**2 + b**2 - c**2) / (2 * a * b)
-    if angle > 1:
-        angle = 1
-    elif angle < -1:
-        angle = -1
-    return math.acos(angle)
+    if a * b == 0:
+        print("WARNING a or b is null in AlKashi")
+        return 0
+    # Note : to get the other altenative, simply change the sign of the return :
+    return sign * math.acos(min(1, max(-1, (a ** 2 + b ** 2 - c ** 2) / (2 * a * b))))
 
-def computeIK_test(x, y, z, verbose=True, use_rads=True):
-    z = constants.Z_DIRECTION * z
-    theta1 = constants.THETA1_MOTOR_SIGN * math.atan2(y, x) # OK
-    AH = math.sqrt(x ** 2 + y ** 2) - constants.constL1
-    AM = math.sqrt(AH ** 2 + z ** 2)
-    theta2 = math.atan2(z, AH) - alKashi(constants.constL2, AM, constants.constL3)
-    theta3 = math.atan2(AH, z) - alKashi(constants.constL3, AM, constants.constL2)
-    return [theta1*constants.THETA1_MOTOR_SIGN,
-            theta2 - constants.THETA2_MOTOR_SIGN * constants.theta2Correction,
-            theta3 + constants.THETA3_MOTOR_SIGN * constants.theta3Correction]
+def angleRestrict(angle, use_rads=False):
+    if use_rads:
+        return modulopi(angle)
+    else:
+        return modulo180(angle)
 
-def computeIK(x, y, z, verbose=True, use_rads=True):
+# Takes an angle that's between 0 and 360 and returns an angle that is between -180 and 180
+def modulo180(angle):
+    if -180 < angle < 180:
+        return angle
+
+    angle = angle % 360
+    if angle > 180:
+        return -360 + angle
+
+    return angle
+
+
+def modulopi(angle):
+    if -math.pi < angle < math.pi:
+        return angle
+
+    angle = angle % (math.pi * 2)
+    if angle > math.pi:
+        return -math.pi * 2 + angle
+
+    return angle
+
+# Computes the inverse kinematics of a leg in the leg's frame
+# Given the destination point (x, y, z) of a limb with 3 rotational axes separated by the distances (l1, l2, l3),
+# returns the angles to apply to the 3 axes
+def computeIK(
+    x,
+    y,
+    z,
+    l1=constants.constL1,
+    l2=constants.constL2,
+    l3=constants.constL3,
+    verbose=False,
+    use_rads=constants.USE_RADS_OUTPUT,
+    sign=-1,
+    use_mm=constants.USE_MM_INPUT,
+):
+    dist_unit = 1
+    if use_mm:
+        dist_unit = 0.001
+    x = x * dist_unit
+    y = y * dist_unit
+    z = z * dist_unit
+
+    # theta1 is simply the angle of the leg in the X/Y plane. We have the first angle we wanted.
+    if y == 0 and x == 0:
+        # Taking care of this singularity (leg right on top of the first rotational axis)
+        theta1 = 0
+    else:
+        theta1 = math.atan2(y, x)
+
+    # Distance between the second motor and the projection of the end of the leg on the X/Y plane
+    xp = math.sqrt(x * x + y * y) - l1
+    # if xp < 0:
+    #     print("Destination point too close")
+    #     xp = 0
+
+    # Distance between the second motor arm and the end of the leg
+    d = math.sqrt(math.pow(xp, 2) + math.pow(z, 2))
+    # if d > l2 + l3:
+    #     print("Destination point too far away")
+    #     d = l2 + l3
+
+    # Knowing l2, l3 and d, theta1 and theta2 can be computed using the Al Kashi law
+    # There are 2 solutions for most of the points, forcing a convention here
+    theta2 = alKashi(l2, d, l3, sign=sign) - constants.Z_DIRECTION * math.atan2(z, xp)
+    theta3 = math.pi + alKashi(l2, l3, d, sign=sign)
+
+    if use_rads:
+
+        result = [
+            angleRestrict(constants.THETA1_MOTOR_SIGN * theta1, use_rads=use_rads),
+            angleRestrict(
+                constants.THETA2_MOTOR_SIGN * (theta2 + constants.theta2Correction), use_rads=use_rads
+            ),
+            angleRestrict(
+                constants.THETA3_MOTOR_SIGN * (theta3 + constants.theta3Correction), use_rads=use_rads
+            ),
+        ]
+
+    else:
+        result = [
+            angleRestrict(constants.THETA1_MOTOR_SIGN * math.degrees(theta1), use_rads=use_rads),
+            angleRestrict(
+                constants.THETA2_MOTOR_SIGN * (math.degrees(theta2) + constants.theta2Correction),
+                use_rads=use_rads,
+            ),
+            angleRestrict(
+                constants.THETA3_MOTOR_SIGN * (math.degrees(theta3) + constants.theta3Correction),
+                use_rads=use_rads,
+            ),
+        ]
+    if verbose:
+        print(
+            "Asked IK for x={}, y={}, z={}\n, --> theta1={}, theta2={}, theta3={}".format(
+                x,
+                y,
+                z,
+                result[0],
+                result[1],
+                result[2],
+            )
+        )
+
+    return result
+
+def computeIKNous(x, y, z, verbose=True, use_rads=True):
     # return [0,
     #         0 + constants.THETA2_MOTOR_SIGN * constants.theta2Correction,
     #         0 + constants.THETA3_MOTOR_SIGN * constants.theta3Correction]
-    return computeIK_test(0.26, 0, 0, verbose, use_rads)
     z = constants.Z_DIRECTION * z
     # T2    t - pi, t + pi, pi - t
     # T3    t - pi, t + pi, pi - t
@@ -125,6 +235,7 @@ def computeIK(x, y, z, verbose=True, use_rads=True):
     if False: #postion de debug
         return [0, constants.THETA2_MOTOR_SIGN * constants.theta2Correction, constants.THETA3_MOTOR_SIGN * constants.theta3Correction] # bras allongé = 0, t2corr, -t3corr
 
+    return inverse(x, y, z)
 
     return [theta1, theta2 + constants.theta2Correction, theta3 - constants.theta3Correction]
 
