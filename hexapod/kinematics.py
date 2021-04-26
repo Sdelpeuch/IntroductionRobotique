@@ -47,7 +47,7 @@ def inverse(x, y, z, verbose=True, use_rads=True):
     return [Theta1, -Theta2, Theta3]
 
 
-def computeIKOriented(pos, leg_id, pos_ini, extra_theta):
+def computeIKOriented(x, y, z, leg_id, params, verbose=True):
     """
     pos : position souhaitée du bout de la patte dans le référentiel du robot centré sur le bout de la patte
     pos_ini : position du bout de la patte au repos/initiale dans le référentiel de la patte centré sur la base de la patte
@@ -56,11 +56,20 @@ def computeIKOriented(pos, leg_id, pos_ini, extra_theta):
     - Entrée: positions cibles (tuples (x, y, z)) pour le bout de la patte
     - Sortie: un tableau contenant les positions angulaires cibles (radian) pour les moteurs
     """
-    angles = [0, 0, np.pi/2, np.pi, np.pi, -np.pi/2]
-    a = [leg_id-1]
+    pos = (x, y, z*constants.Z_DIRECTION)
+
+    angles = constants.LEG_ANGLES # [np.pi/4, 0, np.pi/2, np.pi, np.pi, -np.pi/2]
+    a = angles[leg_id-1]
     rot = R.from_rotvec(a * np.array([0,0,1])).as_matrix()
 
-    return inverse(*(rot.dot(np.array(pos)) + pos_ini))
+    pos_ini = params.initLeg[leg_id-1] + [params.z]
+
+    print(np.array(pos))
+    print(np.array(pos_ini))
+    print(np.array(pos) + np.array(pos_ini))
+    
+    res = rot.dot(np.array(pos)) + np.array(pos_ini)
+    return inverse(*res)
 
 
 def legs(leg1, leg2, leg3, leg4, leg5, leg6):
