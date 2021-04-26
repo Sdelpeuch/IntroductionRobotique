@@ -78,6 +78,22 @@ leg_center_pos = [0.1248, -0.06164, 0.001116 + 0.5]
 leg_angle = -math.pi / 4
 params = Parameters()
 
+def print_points(points):
+    i = -1
+    T = []
+    print("#####")
+    for pt in points:
+        # Drawing each step of the DK calculation
+        i += 1
+        T.append(kinematics.rotaton_2D(pt[0], pt[1] , pt[2], leg_angle))
+        T[-1][0] += leg_center_pos[0] # Ajout l'offset de l'épaule
+        T[-1][1] += leg_center_pos[1]
+        T[-1][2] += leg_center_pos[2]
+        print("Drawing cross {} at {}".format(i, T[-1]))
+        p.resetBasePositionAndOrientation(
+            crosses[i], T[-1], to_pybullet_quaternion(0, 0, leg_angle)
+        )
+
 def inverseUpdate(controls):
     x = p.readUserDebugParameter(controls[0])
     y = p.readUserDebugParameter(controls[1])
@@ -101,7 +117,9 @@ elif args.mode == "direct":
         if "c1" in name or "thigh" in name or "tibia" in name:
             controls[name] = p.addUserDebugParameter(name, -math.pi, math.pi, 0)
 elif args.mode == "inverse":
-    cross = p.loadURDF("target2/robot.urdf")
+    crosses = []
+    for i in range(5):
+        crosses.append(p.loadURDF("target2/robot.urdf"))
     # Use your own DK function
     alphas = kinematics.computeDK(0, 0, 0, use_rads=True) # [0, constants.THETA2_MOTOR_SIGN * constants.theta2Correction, constants.THETA3_MOTOR_SIGN * constants.theta3Correction]
     controls["target_x"] = p.addUserDebugParameter("target_x", -0.4, 0.4, alphas[0])
@@ -126,20 +144,22 @@ while True:
         )
         
         # points = LEG_CENTER_POS # --> met une croix sur les 6 épaules (mettre leg_angle à 0)
-        i = -1
-        T = []
-        print("#####")
-        for pt in points:
-            # Drawing each step of the DK calculation
-            i += 1
-            T.append(kinematics.rotaton_2D(pt[0], pt[1] , pt[2], leg_angle))
-            T[-1][0] += leg_center_pos[0] # Ajout l'offset de l'épaule
-            T[-1][1] += leg_center_pos[1]
-            T[-1][2] += leg_center_pos[2]
-            print("Drawing cross {} at {}".format(i, T[-1]))
-            p.resetBasePositionAndOrientation(
-                crosses[i], T[-1], to_pybullet_quaternion(0, 0, leg_angle)
-            )
+        # i = -1
+        # T = []
+        # print("#####")
+        # for pt in points:
+        #     # Drawing each step of the DK calculation
+        #     i += 1
+        #     T.append(kinematics.rotaton_2D(pt[0], pt[1] , pt[2], leg_angle))
+        #     T[-1][0] += leg_center_pos[0] # Ajout l'offset de l'épaule
+        #     T[-1][1] += leg_center_pos[1]
+        #     T[-1][2] += leg_center_pos[2]
+        #     print("Drawing cross {} at {}".format(i, T[-1]))
+        #     p.resetBasePositionAndOrientation(
+        #         crosses[i], T[-1], to_pybullet_quaternion(0, 0, leg_angle)
+        #     )
+        print_points(points)
+
         sim.setRobotPose(
             [0, 0, 0.5],
             to_pybullet_quaternion(0, 0, 0),
@@ -160,6 +180,9 @@ while True:
         # Use your own IK function
         alphas = kinematics.computeIK(x, y, z, verbose=True, use_rads=True)
 
+        points = kinematics.computeDKDetailed(alphas[0], alphas[1], alphas[2]) 
+        print_points(points)
+
         targets["j_c1_rf"] = alphas[0]
         targets["j_thigh_rf"] = alphas[1]
         targets["j_tibia_rf"] = alphas[2]
@@ -174,7 +197,7 @@ while True:
         T[2] += leg_center_pos[2]
         # print("Drawing cross {} at {}".format(i, T))
         p.resetBasePositionAndOrientation(
-            cross, T, to_pybullet_quaternion(0, 0, leg_angle)
+            crosses [-1], T, to_pybullet_quaternion(0, 0, leg_angle)
         )
     elif args.mode == "robot-ik":
         None
