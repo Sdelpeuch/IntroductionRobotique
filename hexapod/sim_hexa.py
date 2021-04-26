@@ -7,6 +7,8 @@ import argparse
 import pybullet as p
 from onshape_to_robot.simulation import Simulation
 
+import mouse
+
 import kinematics
 from constants import *
 
@@ -52,7 +54,6 @@ def to_pybullet_quaternion(roll, pitch, yaw, degrees=False):
     rot_quat = rot.as_quat()
     # print(rot_quat)
     return rot_quat
-
 
 # Updates the values of the dictionnary targets to set 3 angles to a given leg
 def set_leg_angles(alphas, leg_id, targets, params):
@@ -126,6 +127,12 @@ elif args.mode == "inverse":
     controls["target_y"] = p.addUserDebugParameter("target_y", -0.4, 0.4, alphas[1])
     controls["target_z"] = p.addUserDebugParameter("target_z", -0.4, 0.4, alphas[2])
 
+elif args.mode == "mouse":
+    keys_z = -0.01
+
+    # test mapping pad
+    # mouse.verboseMapping(1, 0, 10, 0, 100)
+    # mouse.verboseMapping(5, 0, 10, -50, 50)
 
 while True:
     targets = {}
@@ -209,13 +216,35 @@ while True:
                 0.03 * math.sin(2 * math.pi * 0.2 * time.time()),
                 leg_id,
                 params,
-                verbose=True,
+                verbose=False,
             )
             set_leg_angles(alphas, leg_id, targets, params)
         sim.setRobotPose(
             [0, 0, 0.5],
             to_pybullet_quaternion(0, 0, 0),
-        )
+        )      
         state = sim.setJoints(targets)
+    
+    elif args.mode == "mouse":
+        # mouse
+        mp = mouse.getMousePosition()
+        mouse_x, mouse_y = mouse.mappingPad(mp[0], 0, 768, -0.1, 0.1), mouse.mappingPad(mp[1], 0, 1366, -0.1, 0.1)
+        # Use your own IK function
+        for leg_id in range(1, 7):
+            alphas = kinematics.computeIKOriented(
+                mouse_x,
+                mouse_y,
+                keys_z,
+                leg_id,
+                params,
+                verbose=False,
+            )
+            set_leg_angles(alphas, leg_id, targets, params)
 
+        # sim.setRobotPose(
+        #     [0, 0, 0.5],
+        #     to_pybullet_quaternion(0, 0, 0),
+        # )
+
+        state = sim.setJoints(targets)
     sim.tick()
