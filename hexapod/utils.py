@@ -92,12 +92,12 @@ class SimpleRobot:
     def __init__(self, dxl_io):
         self.dxl_io = dxl_io
         self.legs = {
-            1: [SimpleMotor(8), SimpleMotor(10), SimpleMotor(12)],
-            2: [SimpleMotor(14), SimpleMotor(16), SimpleMotor(18)],
-            3: [SimpleMotor(13), SimpleMotor(15), SimpleMotor(17)],
-            4: [SimpleMotor(7), SimpleMotor(9), SimpleMotor(11)],
-            5: [SimpleMotor(1), SimpleMotor(3), SimpleMotor(5)],
-            6: [SimpleMotor(2), SimpleMotor(4), SimpleMotor(6)],
+            1: [SimpleMotor(11), SimpleMotor(12), SimpleMotor(13)],
+            2: [SimpleMotor(21), SimpleMotor(22), SimpleMotor(23)],
+            3: [SimpleMotor(31), SimpleMotor(32), SimpleMotor(33)],
+            4: [SimpleMotor(41), SimpleMotor(42), SimpleMotor(43)],
+            5: [SimpleMotor(51), SimpleMotor(52), SimpleMotor(53)],
+            6: [SimpleMotor(61), SimpleMotor(62), SimpleMotor(63)],
         }
         self.delay_after_write = 0.01
         self.params = None
@@ -140,6 +140,7 @@ class SimpleRobot:
             v[0].goal_position = v[0].present_position
             v[1].goal_position = v[1].present_position
             v[2].goal_position = v[2].present_position
+
 
     def motors(self):
         list_of_motors = []
