@@ -69,7 +69,7 @@ def computeIKOriented(x, y, z, leg_id, params, verbose=True):
     print(np.array(pos) + np.array(pos_ini))
     
     res = rot.dot(np.array(pos)) + np.array(pos_ini)
-    return inverse(*res)
+    return computeIK(*res)
 
 
 def legs(leg1, leg2, leg3, leg4, leg5, leg6):
@@ -358,7 +358,7 @@ def setPositionToRobot(robot, params):
     for key, value in robot.legs.items():
         # lire la valeur des Thetas dans le tableau.
         # Theta1, Theta2, Theta3 =
-        setPositionToRobotLeg(Theta1, Theta2, Theta3, leg=key, robot)
+        setPositionToRobotLeg(Theta1, Theta2, Theta3, key, robot)
 
     # On envoie la consigne au robot
     robot.smooth_tick_read_and_write(delay=dtime, verbose=False)
