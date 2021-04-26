@@ -17,6 +17,8 @@ def main():
     ports = pypot.dynamixel.get_available_ports()
     dxl_io = pypot.dynamixel.DxlIO(ports[0], baudrate=1000000)
     robot = SimpleRobot(dxl_io)
+
+    print(robot.legs.items())
     robot.init()
     time.sleep(0.1)
     robot.enable_torque()

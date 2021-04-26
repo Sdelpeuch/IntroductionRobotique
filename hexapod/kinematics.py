@@ -308,3 +308,51 @@ def rotaton_2D(x, y, z, leg_angle):
     xy = np.array([[x], [y]])
     xy = np.dot(rotation2D(leg_angle), xy)
     return [xy[0], xy[1], z]
+
+
+"""[dictionnaire des legs]
+
+dict_items([(1, [id: 11, goal_position: 0, present_position: 0,
+                 id: 12, goal_position: 0, present_position: 0,
+                 id: 13, goal_position: 0, present_position: 0]),
+            (2, [id: 21, goal_position: 0, present_position: 0,
+                 id: 22, goal_position: 0, present_position: 0,
+                 id: 23, goal_position: 0, present_position: 0]),
+            (3, [id: 31, goal_position: 0, present_position: 0,
+                 id: 32, goal_position: 0, present_position: 0,
+                 id: 33, goal_position: 0, present_position: 0]),
+            (4, [id: 41, goal_position: 0, present_position: 0,
+                 id: 42, goal_position: 0, present_position: 0,
+                 id: 43, goal_position: 0, present_position: 0]),
+            (5, [id: 51, goal_position: 0, present_position: 0,
+                 id: 52, goal_position: 0, present_position: 0,
+                 id: 53, goal_position: 0, present_position: 0]),
+            (6, [id: 61, goal_position: 0, present_position: 0,
+                 id: 62, goal_position: 0, present_position: 0,
+                 id: 63, goal_position: 0, present_position: 0])])
+"""
+
+def setPositionToRobotLeg(Theta1, Theta2, Theta3, leg, robot):
+    # modifie les consignes du robot pour une jambe
+    print(robot.legs.items()) # Avant
+    for v in robot.legs[leg]:
+        v[0].goal_position = Theta1
+        v[1].goal_position = Theta2
+        v[2].goal_position = Theta3
+    print(robot.legs.items()) # Après
+
+def setPositionToRobot(robot, params):
+    # Délai entre deux consignes pour le robot, en secondes
+    dtime = 3
+
+    # On modifie les consignes pour les angles des pattes
+    for key, value in robot.legs.items():
+        # lire la valeur des Thetas dans le tableau.
+        # Theta1, Theta2, Theta3 =
+        setPositionToRobotLeg(Theta1, Theta2, Theta3, leg=key, robot)
+
+    # On envoie la consigne au robot
+    robot.smooth_tick_read_and_write(delay=dtime, verbose=False)
+
+
+
