@@ -6,48 +6,48 @@ import math
 
 import constants
 
-# C'est ce qu'on a fait, ça ne marche pas (à comparer pour répondre aux questions du prof)
-def inverse(x, y, z, verbose=True, use_rads=True):
-    """
-    Reçoit en argument une position cible (x, y, z) pour le bout de la patte, et produit les angles
-    (alpha, beta, gamma) pour que la patte atteigne cet objectif
+# # C'est ce qu'on a fait, ça ne marche pas (à comparer pour répondre aux questions du prof)
+# def inverse(x, y, z, verbose=True, use_rads=True):
+#     """
+#     Reçoit en argument une position cible (x, y, z) pour le bout de la patte, et produit les angles
+#     (alpha, beta, gamma) pour que la patte atteigne cet objectif
 
-    - Entrée: x, y, z, une position cible dans le repère de la patte (mètres), provenant du slider
-    - Sortie: un tableau contenant les 3 positions angulaires cibles (en radians)
-    """
+#     - Entrée: x, y, z, une position cible dans le repère de la patte (mètres), provenant du slider
+#     - Sortie: un tableau contenant les 3 positions angulaires cibles (en radians)
+#     """
 
-    Theta1 = np.arctan2(y, x) # OK
+#     Theta1 = np.arctan2(y, x) # OK
 
-    dAP = np.sqrt(x**2 + y**2) - constants.constL1
-    d = np.sqrt(dAP**2 + z**2)
-    a = np.arctan2(z, dAP)
+#     dAP = np.sqrt(x**2 + y**2) - constants.constL1
+#     d = np.sqrt(dAP**2 + z**2)
+#     a = np.arctan2(z, dAP)
 
-    # --> AlKashi sur le 2eme angle
-    angle2 = (constants.constL2**2 + d**2 - constants.constL3**2) / (2 * constants.constL2 * d)
-    if angle2 > 1:
-        angle2 = 1
-    elif angle2 < -1:
-        angle2 = -1
-    b = np.arccos( angle2 )
+#     # --> AlKashi sur le 2eme angle
+#     angle2 = (constants.constL2**2 + d**2 - constants.constL3**2) / (2 * constants.constL2 * d)
+#     if angle2 > 1:
+#         angle2 = 1
+#     elif angle2 < -1:
+#         angle2 = -1
+#     b = np.arccos( angle2 )
 
-    Theta2 = a + b + constants.theta2Correction # OK
+#     Theta2 = a + b + constants.theta2Correction # OK
     
-    # --> AlKashi sur le 3eme angle
-    angle3 = (constants.constL2**2 + constants.constL3**2 - d**2) / (2 * constants.constL2**2 * constants.constL3**2)
-    if angle3 > 1:
-        angle3 = 1
-    elif angle3 < -1:
-        angle3 = -1
-    Theta3 = np.pi - np.arccos( angle3 )
+#     # --> AlKashi sur le 3eme angle
+#     angle3 = (constants.constL2**2 + constants.constL3**2 - d**2) / (2 * constants.constL2**2 * constants.constL3**2)
+#     if angle3 > 1:
+#         angle3 = 1
+#     elif angle3 < -1:
+#         angle3 = -1
+#     Theta3 = np.pi - np.arccos( angle3 )
     
-    Theta3 += constants.theta3Correction
+#     Theta3 += constants.theta3Correction
 
-    print('theta3:', Theta3, ', angle3:', angle3)
+#     print('theta3:', Theta3, ', angle3:', angle3)
 
-    return [Theta1, -Theta2, Theta3]
+#     return [Theta1, -Theta2, Theta3]
+    
 
-
-def computeIKOriented(x, y, z, leg_id, params, verbose=True):
+def computeIKOriented(x, y, z, leg_id, params, verbose=True, extra_angle = 0):
     """
     pos : position souhaitée du bout de la patte dans le référentiel du robot centré sur le bout de la patte
     pos_ini : position du bout de la patte au repos/initiale dans le référentiel de la patte centré sur la base de la patte
@@ -363,5 +363,34 @@ def setPositionToRobot(robot, params):
     # On envoie la consigne au robot
     robot.smooth_tick_read_and_write(delay=dtime, verbose=False)
 
+def walkDistanceAngle(dist, angle, step_dist, step_height, params):
+    """
+    Retourne un tableau contenant une successions des positions clefs des 18 angles 
+    des steppers permettant la marche sur la distance dist avec un angle donné
+    """
+    res = []
+    res += [toIniPos(params)]
 
+    nb_step = dist//step_dist
+    reste = dist - (nb_step*step_dist)
 
+    # first half-step
+
+    # steps (nb_steps-1)
+
+    # last half-step
+
+def walkXY(x_dist, y_dist, step_dist, step_height, params):
+    """
+    Retourne un tableau contenant une successions des positions clefs des 18 angles 
+    des steppers permettant de marcher jusqu'à la position (x,y)
+    """
+    distance = np.sqrt(x_dist**2+y_dist**2)
+    angle = math.atan2(y_dist, x_dist)
+    return walkDistanceAngle(distance, angle, step_dist, params)
+
+def toIniPos(params):
+    res = []
+    for i in range(1,7):
+        res += [computeIKOriented(0, 0, 0, i, params)]
+    return res

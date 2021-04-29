@@ -212,10 +212,10 @@ while True:
                 verbose=True,
             )
             set_leg_angles(alphas, leg_id, targets, params)
-        sim.setRobotPose(
-            [0, 0, 0.5],
-            to_pybullet_quaternion(0, 0, 0),
-        )
+        # sim.setRobotPose(
+        #     [0, 0, 0.5],
+        #     to_pybullet_quaternion(0, 0, 0),
+        # )
         state = sim.setJoints(targets)
 
     sim.tick()
