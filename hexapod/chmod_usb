@@ -1,0 +1,5 @@
+#!/bin/bash
+
+sudo chmod 777 /dev/ttyACM0 && echo "/dev/ttyACM0 autorisé"
+
+sudo chmod 777 /dev/ttyACM1 && echo "/dev/ttyACM1 autorisé"

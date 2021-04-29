@@ -64,13 +64,13 @@ def computeIKOriented(x, y, z, leg_id, params, verbose=True, extra_angle = 0):
 
     pos_ini = params.initLeg[leg_id-1] + [params.z]
 
-    print(np.array(pos))
-    print(np.array(pos_ini))
-    print(np.array(pos) + np.array(pos_ini))
+    if verbose:
+        print(np.array(pos))
+        print(np.array(pos_ini))
+        print(np.array(pos) + np.array(pos_ini))
     
     res = rot.dot(np.array(pos)) + np.array(pos_ini)
     return computeIK(*res)
-
 
 def legs(leg1, leg2, leg3, leg4, leg5, leg6):
     """
@@ -103,11 +103,12 @@ def alKashi(a, b, c, sign=-1):
      |__________
      B    a     C
     Pour un triangle de longueurs a, b, c, donne l'angle BCA
+    Le domaine de définition d'arcccos [-1, 1] est respecté.
     """
     if a * b == 0:
         print("WARNING a or b is null in AlKashi")
         return 0
-    # Note : to get the other altenative, simply change the sign of the return :
+    # Note : to get the other altenative, simply change the sign of the return
     return sign * math.acos(min(1, max(-1, (a ** 2 + b ** 2 - c ** 2) / (2 * a * b))))
 
 def angleRestrict(angle, use_rads=False):
@@ -127,7 +128,7 @@ def modulo180(angle):
 
     return angle
 
-
+# Takes an angle that's between 0 and 2pi and returns an angle that is between -pi and pi
 def modulopi(angle):
     if -math.pi < angle < math.pi:
         return angle
@@ -139,8 +140,8 @@ def modulopi(angle):
     return angle
 
 # Computes the inverse kinematics of a leg in the leg's frame
-# Given the destination point (x, y, z) of a limb with 3 rotational axes separated by the distances (l1, l2, l3),
-# returns the angles to apply to the 3 axes
+# Given the destination point (x, y, z) of a limb with 3 rotational axes
+# separated by the distances (l1, l2, l3), returns the angles to apply to the 3 axes
 def computeIK(
     x,
     y,
