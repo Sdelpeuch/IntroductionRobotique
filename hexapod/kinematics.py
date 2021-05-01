@@ -55,35 +55,6 @@ def custom_print(string, to_print=0):
 
 #     return [Theta1, -Theta2, Theta3]
     
-<<<<<<< HEAD
-=======
-
-def computeIKOriented(x, y, z, leg_id, params, verbose=True, extra_angle = 0):
-    """
-    pos : position souhaitée du bout de la patte dans le référentiel du robot centré sur le bout de la patte
-    pos_ini : position du bout de la patte au repos/initiale dans le référentiel de la patte centré sur la base de la patte
-
-
-    - Entrée: positions cibles (tuples (x, y, z)) pour le bout de la patte
-    - Sortie: un tableau contenant les positions angulaires cibles (radian) pour les moteurs
-    """
-    pos = (x, y, z*constants.Z_DIRECTION)
-
-    angles = constants.LEG_ANGLES # [np.pi/4, 0, np.pi/2, np.pi, np.pi, -np.pi/2]
-    a = angles[leg_id-1]
-    rot = R.from_rotvec(a * np.array([0,0,1])).as_matrix()
-
-    pos_ini = params.initLeg[leg_id-1] + [params.z]
-
-    if verbose:
-        custom_print(np.array(pos))
-        custom_print(np.array(pos_ini))
-        custom_print(np.array(pos) + np.array(pos_ini))
-    
-    res = rot.dot(np.array(pos)) + np.array(pos_ini)
-    return computeIK(*res)
-
->>>>>>> 7f96a1797d7ad4a73d542cf263e230e20665d6b0
 def legs(leg1, leg2, leg3, leg4, leg5, leg6):
     """
     - Entrée: positions cibles (tuples (x, y, z)) pour le bout des 6 pattes dans le référentiel du robot
@@ -497,7 +468,6 @@ def walkXY(x_dist, y_dist, step_dist, step_height, params):
 def toIniPos(params):
     res = []
     for i in range(1,7):
-<<<<<<< HEAD
         res += computeIKOriented(0, 0, 0, i, params)
     return res
 
@@ -523,7 +493,3 @@ def toIniPos(params):
 
 # plt.plot(xvals, yinterp, '-x')
 # [<matplotlib.lines.Line2D object at 0x...>]
-=======
-        res += [computeIKOriented(0, 0, 0, i, params)]
-    return res
->>>>>>> 7f96a1797d7ad4a73d542cf263e230e20665d6b0

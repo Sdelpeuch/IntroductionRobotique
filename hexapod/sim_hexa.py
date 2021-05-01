@@ -15,8 +15,6 @@ from constants import *
 # from squaternion import Quaternion
 from scipy.spatial.transform import Rotation
 
-from scipy.interpolate
-
 
 class Parameters:
     def __init__(
