@@ -1,10 +1,19 @@
-# not empty file
-import numpy as np 
+import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as R
 import math
 
 import constants
+
+
+def custom_print(string, to_print=0):
+    """
+    just a function to print only if to_print = 1
+    to_print is 0 by default
+    for verbose purpose
+    """
+    if (to_print == 1):
+        print(string)
 
 # # C'est ce qu'on a fait, ça ne marche pas (à comparer pour répondre aux questions du prof)
 # def inverse(x, y, z, verbose=True, use_rads=True):
@@ -46,6 +55,35 @@ import constants
 
 #     return [Theta1, -Theta2, Theta3]
     
+<<<<<<< HEAD
+=======
+
+def computeIKOriented(x, y, z, leg_id, params, verbose=True, extra_angle = 0):
+    """
+    pos : position souhaitée du bout de la patte dans le référentiel du robot centré sur le bout de la patte
+    pos_ini : position du bout de la patte au repos/initiale dans le référentiel de la patte centré sur la base de la patte
+
+
+    - Entrée: positions cibles (tuples (x, y, z)) pour le bout de la patte
+    - Sortie: un tableau contenant les positions angulaires cibles (radian) pour les moteurs
+    """
+    pos = (x, y, z*constants.Z_DIRECTION)
+
+    angles = constants.LEG_ANGLES # [np.pi/4, 0, np.pi/2, np.pi, np.pi, -np.pi/2]
+    a = angles[leg_id-1]
+    rot = R.from_rotvec(a * np.array([0,0,1])).as_matrix()
+
+    pos_ini = params.initLeg[leg_id-1] + [params.z]
+
+    if verbose:
+        custom_print(np.array(pos))
+        custom_print(np.array(pos_ini))
+        custom_print(np.array(pos) + np.array(pos_ini))
+    
+    res = rot.dot(np.array(pos)) + np.array(pos_ini)
+    return computeIK(*res)
+
+>>>>>>> 7f96a1797d7ad4a73d542cf263e230e20665d6b0
 def legs(leg1, leg2, leg3, leg4, leg5, leg6):
     """
     - Entrée: positions cibles (tuples (x, y, z)) pour le bout des 6 pattes dans le référentiel du robot
@@ -184,7 +222,7 @@ def computeIK(
             ),
         ]
     if verbose:
-        print(
+        custom_print(
             "Asked IK for x={}, y={}, z={}\n, --> theta1={}, theta2={}, theta3={}".format(
                 x,
                 y,
@@ -318,12 +356,12 @@ dict_items([(1, [id: 11, goal_position: 0, present_position: 0,
 
 def setPositionToRobotLeg(Theta1, Theta2, Theta3, leg, robot):
     # modifie les consignes du robot pour une jambe
-    print(robot.legs.items()) # Avant
+    custom_print(robot.legs.items()) # Avant
     for v in robot.legs[leg]:
         v[0].goal_position = Theta1
         v[1].goal_position = Theta2
         v[2].goal_position = Theta3
-    print(robot.legs.items()) # Après
+    custom_print(robot.legs.items()) # Après
 
 def setPositionToRobot(robot, params):
     # Délai entre deux consignes pour le robot, en secondes
@@ -373,6 +411,7 @@ def walkDistanceAngle(dist, angle, step_dist, step_height, params):
 
     nb_step = dist//step_dist
     reste = dist - (nb_step*step_dist)
+    custom_print(res, 1)
 
     if(nb_step != 0):
         # first half-step
@@ -458,6 +497,7 @@ def walkXY(x_dist, y_dist, step_dist, step_height, params):
 def toIniPos(params):
     res = []
     for i in range(1,7):
+<<<<<<< HEAD
         res += computeIKOriented(0, 0, 0, i, params)
     return res
 
@@ -483,3 +523,7 @@ def toIniPos(params):
 
 # plt.plot(xvals, yinterp, '-x')
 # [<matplotlib.lines.Line2D object at 0x...>]
+=======
+        res += [computeIKOriented(0, 0, 0, i, params)]
+    return res
+>>>>>>> 7f96a1797d7ad4a73d542cf263e230e20665d6b0
