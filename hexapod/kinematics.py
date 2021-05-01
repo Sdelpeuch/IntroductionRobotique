@@ -15,6 +15,7 @@ def custom_print(string, to_print=0):
     if (to_print == 1):
         print(string)
 
+
 # # C'est ce qu'on a fait, ça ne marche pas (à comparer pour répondre aux questions du prof)
 # def inverse(x, y, z, verbose=True, use_rads=True):
 #     """
@@ -54,7 +55,7 @@ def custom_print(string, to_print=0):
 #     print('theta3:', Theta3, ', angle3:', angle3)
 
 #     return [Theta1, -Theta2, Theta3]
-    
+
 def legs(leg1, leg2, leg3, leg4, leg5, leg6):
     """
     - Entrée: positions cibles (tuples (x, y, z)) pour le bout des 6 pattes dans le référentiel du robot
@@ -111,6 +112,7 @@ def modulo180(angle):
 
     return angle
 
+
 # Takes an angle that's between 0 and 2pi and returns an angle that is between -pi and pi
 def modulopi(angle):
     if -math.pi < angle < math.pi:
@@ -121,6 +123,7 @@ def modulopi(angle):
         return -math.pi * 2 + angle
 
     return angle
+
 
 # Computes the inverse kinematics of a leg in the leg's frame
 # Given the destination point (x, y, z) of a limb with 3 rotational axes
@@ -347,7 +350,7 @@ def setPositionToRobot(robot, params):
     # On envoie la consigne au robot
     robot.smooth_tick_read_and_write(delay=dtime, verbose=False)
 
-def computeIKOriented(x, y, z, leg_id, params, verbose=True, extra_angle = 0):
+def computeIKOriented(x, y, z, leg_id, params, verbose=False, extra_angle = 0):
     """
     pos : position souhaitée du bout de la patte dans le référentiel du robot centré sur le bout de la patte
     pos_ini : position du bout de la patte au repos/initiale dans le référentiel de la patte centré sur la base de la patte
@@ -368,7 +371,7 @@ def computeIKOriented(x, y, z, leg_id, params, verbose=True, extra_angle = 0):
         print(np.array(pos))
         print(np.array(pos_ini))
         print(np.array(pos) + np.array(pos_ini))
-    
+
     res = rot.dot(np.array(pos)) + np.array(pos_ini)
     return computeIK(*res)
 
@@ -380,9 +383,9 @@ def walkDistanceAngle(dist, angle, step_dist, step_height, params):
     res = []
     res += [toIniPos(params)]
 
-    nb_step = dist//step_dist
+    nb_step = int(dist//step_dist)
     reste = dist - (nb_step*step_dist)
-    custom_print(res, 1)
+    custom_print(res, 0)
 
     if(nb_step != 0):
         # first half-step
@@ -431,7 +434,7 @@ def walkDistanceAngle(dist, angle, step_dist, step_height, params):
             calculated_angles += computeIKOriented(0, 0, 0, i*2+1, params, extra_angle=angle)
             calculated_angles += computeIKOriented(0, 0, 0, i*2+2, params, extra_angle=angle)
         res += [calculated_angles]
-    
+
     #reste
     calculated_angles = []
     for i in range(3):
@@ -453,8 +456,13 @@ def walkDistanceAngle(dist, angle, step_dist, step_height, params):
         calculated_angles += computeIKOriented(0, 0, 0, i*2+1, params, extra_angle=angle)
         calculated_angles += computeIKOriented(0, 0, 0, i*2+2, params, extra_angle=angle)
     res += [calculated_angles]
-
-    return res
+    flat = []
+    for step in res:
+        # print("step", step)
+        step = np.array(step).flatten()
+        # print(step)
+        flat += [step]
+    return flat
 
 def walkXY(x_dist, y_dist, step_dist, step_height, params):
     """
@@ -467,29 +475,17 @@ def walkXY(x_dist, y_dist, step_dist, step_height, params):
 
 def toIniPos(params):
     res = []
-    for i in range(1,7):
-        res += computeIKOriented(0, 0, 0, i, params)
+    for i in range(1, 7):
+        res += [computeIKOriented(0, 0, 0, i, params)]
     return res
 
-# def interpolate_mov(key_pos, mult):
-#     n = len(key_pos)
-#     x = np.linspace(0, 1, n)
-#     inter_x = np.linspace(0, 1, n*multi)
-#     inter_y = np.interp()
 
-
-# x = np.linspace(0, 2*np.pi, 10)
-
-# y = np.sin(x)
-
-# xvals = np.linspace(0, 2*np.pi, 50)
-
-# yinterp = np.interp(xvals, x, y)
-
-# import matplotlib.pyplot as plt
-
-# plt.plot(x, y, 'o')
-# [<matplotlib.lines.Line2D object at 0x...>]
-
-# plt.plot(xvals, yinterp, '-x')
-# [<matplotlib.lines.Line2D object at 0x...>]
+def make_smooth(new_angles, last_angles, smooth_num=25):
+    smooth = []
+    for i in range(smooth_num):
+        new = []
+        for index in range(0, len(new_angles)):
+            to_add = (-last_angles[index]+new_angles[index])/smooth_num
+            new += [last_angles[index]+to_add*i]
+        smooth += [new]
+    return smooth

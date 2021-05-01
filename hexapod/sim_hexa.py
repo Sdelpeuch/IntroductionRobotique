@@ -135,7 +135,8 @@ elif args.mode == "mouse":
 
 elif args.mode == "walk":
     last_angles = 18 * [0]
-dt = 0.01
+
+dt = 1/10000
 
 while True:
     targets = {}
@@ -252,14 +253,14 @@ while True:
         state = sim.setJoints(targets)
     elif args.mode == "walk":
         t = time.time()
-        sample = kinematics.walkDistanceAngle(5, 0, 0.1, 0.1, params)
+        sample = kinematics.walkDistanceAngle(2, 0, 0.1, 0.1, params)
         print("time to compute :", time.time() - t)
         # print("sample : ", sample)
         t = time.time()
         for step in sample:
-            # smooth_steps = kinematics.make_smooth(step, last_angles)
+            smooth_steps = kinematics.make_smooth(step, last_angles)
             last_angles = step
-            smooth_steps = [step]
+            # smooth_steps = [step]
             for smooth_step in smooth_steps:
                 for leg_id in range(1, 7):
                     index = (leg_id-1)*3
