@@ -7,13 +7,15 @@ import argparse
 import pybullet as p
 from onshape_to_robot.simulation import Simulation
 
-import mouse
+#import mouse
 
 import kinematics
 from constants import *
 
 # from squaternion import Quaternion
 from scipy.spatial.transform import Rotation
+
+from scipy.interpolate
 
 
 class Parameters:
@@ -217,7 +219,7 @@ while True:
                 leg_id,
                 params,
                 verbose=False,
-            )
+            )   
             set_leg_angles(alphas, leg_id, targets, params)
         # sim.setRobotPose(
         #     [0, 0, 0.5],
@@ -225,26 +227,26 @@ while True:
         # )
         state = sim.setJoints(targets)
     
-    elif args.mode == "mouse":
-        # mouse
-        mp = mouse.getMousePosition()
-        mouse_x, mouse_y = mouse.mappingPad(mp[0], 0, 768, -0.1, 0.1), mouse.mappingPad(mp[1], 0, 1366, -0.1, 0.1)
-        # Use your own IK function
-        for leg_id in range(1, 7):
-            alphas = kinematics.computeIKOriented(
-                mouse_x,
-                mouse_y,
-                keys_z,
-                leg_id,
-                params,
-                verbose=False,
-            )
-            set_leg_angles(alphas, leg_id, targets, params)
+    # elif args.mode == "mouse":
+    #     # mouse
+    #     mp = mouse.getMousePosition()
+    #     mouse_x, mouse_y = mouse.mappingPad(mp[0], 0, 768, -0.1, 0.1), mouse.mappingPad(mp[1], 0, 1366, -0.1, 0.1)
+    #     # Use your own IK function
+    #     for leg_id in range(1, 7):
+    #         alphas = kinematics.computeIKOriented(
+    #             mouse_x,
+    #             mouse_y,
+    #             keys_z,
+    #             leg_id,
+    #             params,
+    #             verbose=False,
+    #         )
+    #         set_leg_angles(alphas, leg_id, targets, params)
         
-        # sim.setRobotPose(
-        #     [0, 0, 0.5],
-        #     to_pybullet_quaternion(0, 0, 0),
-        # )
+    #     # sim.setRobotPose(
+    #     #     [0, 0, 0.5],
+    #     #     to_pybullet_quaternion(0, 0, 0),
+    #     # )
 
-        state = sim.setJoints(targets)
+    #     state = sim.setJoints(targets)
     sim.tick()

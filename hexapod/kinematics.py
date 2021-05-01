@@ -46,32 +46,6 @@ import constants
 
 #     return [Theta1, -Theta2, Theta3]
     
-
-def computeIKOriented(x, y, z, leg_id, params, verbose=True, extra_angle = 0):
-    """
-    pos : position souhaitée du bout de la patte dans le référentiel du robot centré sur le bout de la patte
-    pos_ini : position du bout de la patte au repos/initiale dans le référentiel de la patte centré sur la base de la patte
-
-
-    - Entrée: positions cibles (tuples (x, y, z)) pour le bout de la patte
-    - Sortie: un tableau contenant les positions angulaires cibles (radian) pour les moteurs
-    """
-    pos = (x, y, z*constants.Z_DIRECTION)
-
-    angles = constants.LEG_ANGLES # [np.pi/4, 0, np.pi/2, np.pi, np.pi, -np.pi/2]
-    a = angles[leg_id-1]
-    rot = R.from_rotvec(a * np.array([0,0,1])).as_matrix()
-
-    pos_ini = params.initLeg[leg_id-1] + [params.z]
-
-    if verbose:
-        print(np.array(pos))
-        print(np.array(pos_ini))
-        print(np.array(pos) + np.array(pos_ini))
-    
-    res = rot.dot(np.array(pos)) + np.array(pos_ini)
-    return computeIK(*res)
-
 def legs(leg1, leg2, leg3, leg4, leg5, leg6):
     """
     - Entrée: positions cibles (tuples (x, y, z)) pour le bout des 6 pattes dans le référentiel du robot
@@ -364,6 +338,31 @@ def setPositionToRobot(robot, params):
     # On envoie la consigne au robot
     robot.smooth_tick_read_and_write(delay=dtime, verbose=False)
 
+def computeIKOriented(x, y, z, leg_id, params, verbose=True, extra_angle = 0):
+    """
+    pos : position souhaitée du bout de la patte dans le référentiel du robot centré sur le bout de la patte
+    pos_ini : position du bout de la patte au repos/initiale dans le référentiel de la patte centré sur la base de la patte
+
+
+    - Entrée: positions cibles (tuples (x, y, z)) pour le bout de la patte
+    - Sortie: un tableau contenant les positions angulaires cibles (radian) pour les moteurs
+    """
+    pos = (x, y, z*constants.Z_DIRECTION)
+
+    angles = constants.LEG_ANGLES # [np.pi/4, 0, np.pi/2, np.pi, np.pi, -np.pi/2]
+    a = angles[leg_id-1] + extra_angle
+    rot = R.from_rotvec(a * np.array([0,0,1])).as_matrix()
+
+    pos_ini = params.initLeg[leg_id-1] + [params.z]
+
+    if verbose:
+        print(np.array(pos))
+        print(np.array(pos_ini))
+        print(np.array(pos) + np.array(pos_ini))
+    
+    res = rot.dot(np.array(pos)) + np.array(pos_ini)
+    return computeIK(*res)
+
 def walkDistanceAngle(dist, angle, step_dist, step_height, params):
     """
     Retourne un tableau contenant une successions des positions clefs des 18 angles 
@@ -375,11 +374,77 @@ def walkDistanceAngle(dist, angle, step_dist, step_height, params):
     nb_step = dist//step_dist
     reste = dist - (nb_step*step_dist)
 
-    # first half-step
+    if(nb_step != 0):
+        # first half-step
+        calculated_angles = []
+        for i in range(3):
+            calculated_angles += computeIKOriented(step_dist/4, 0, step_height, i*2+1, params, extra_angle=angle)
+            calculated_angles += computeIKOriented(-step_dist/4, 0, 0, i*2+2, params, extra_angle=angle)
+        res += [calculated_angles]
+        calculated_angles = []
+        for i in range(3):
+            calculated_angles += computeIKOriented(step_dist/2, 0, 0, i*2+1, params, extra_angle=angle)
+            calculated_angles += computeIKOriented(-step_dist/2, 0, 0, i*2+2, params, extra_angle=angle)
+        res += [calculated_angles]
 
-    # steps (nb_steps-1)
+        # steps (nb_steps-1)
+        for j in range(nb_step-1):
+            calculated_angles = []
+            for i in range(3):
+                calculated_angles += computeIKOriented(0, 0, 0, i*2+1, params, extra_angle=angle)
+                calculated_angles += computeIKOriented(0, 0, step_height, i*2+2, params, extra_angle=angle)
+            res += [calculated_angles]
+            calculated_angles = []
+            for i in range(3):
+                calculated_angles += computeIKOriented(-step_dist/2, 0, 0, i*2+1, params, extra_angle=angle)
+                calculated_angles += computeIKOriented(step_dist/2, 0, 0, i*2+2, params, extra_angle=angle)
+            res += [calculated_angles]
+            calculated_angles = []
+            for i in range(3):
+                calculated_angles += computeIKOriented(0, 0, step_height, i*2+1, params, extra_angle=angle)
+                calculated_angles += computeIKOriented(0, 0, 0, i*2+2, params, extra_angle=angle)
+            res += [calculated_angles]
+            calculated_angles = []
+            for i in range(3):
+                calculated_angles += computeIKOriented(step_dist/2, 0, 0, i*2+1, params, extra_angle=angle)
+                calculated_angles += computeIKOriented(-step_dist/2, 0, 0, i*2+2, params, extra_angle=angle)
+            res += [calculated_angles]
 
-    # last half-step
+        # last half-step
+        calculated_angles = []
+        for i in range(3):
+            calculated_angles += computeIKOriented(step_dist/4, 0, 0, i*2+1, params, extra_angle=angle)
+            calculated_angles += computeIKOriented(-step_dist/4, 0, step_height, i*2+2, params, extra_angle=angle)
+        res += [calculated_angles]
+        calculated_angles = []
+        for i in range(3):
+            calculated_angles += computeIKOriented(0, 0, 0, i*2+1, params, extra_angle=angle)
+            calculated_angles += computeIKOriented(0, 0, 0, i*2+2, params, extra_angle=angle)
+        res += [calculated_angles]
+    
+    #reste
+    calculated_angles = []
+    for i in range(3):
+        calculated_angles += computeIKOriented(reste/4, 0, step_height, i*2+1, params, extra_angle=angle)
+        calculated_angles += computeIKOriented(-reste/4, 0, 0, i*2+2, params, extra_angle=angle)
+    res += [calculated_angles]
+    calculated_angles = []
+    for i in range(3):
+        calculated_angles += computeIKOriented(reste/2, 0, 0, i*2+1, params, extra_angle=angle)
+        calculated_angles += computeIKOriented(-reste/2, 0, 0, i*2+2, params, extra_angle=angle)
+    res += [calculated_angles]
+    calculated_angles = []
+    for i in range(3):
+        calculated_angles += computeIKOriented(reste/4, 0, 0, i*2+1, params, extra_angle=angle)
+        calculated_angles += computeIKOriented(-reste/4, 0, step_height, i*2+2, params, extra_angle=angle)
+    res += [calculated_angles]
+    calculated_angles = []
+    for i in range(3):
+        calculated_angles += computeIKOriented(0, 0, 0, i*2+1, params, extra_angle=angle)
+        calculated_angles += computeIKOriented(0, 0, 0, i*2+2, params, extra_angle=angle)
+    res += [calculated_angles]
+
+    return res
 
 def walkXY(x_dist, y_dist, step_dist, step_height, params):
     """
@@ -393,5 +458,28 @@ def walkXY(x_dist, y_dist, step_dist, step_height, params):
 def toIniPos(params):
     res = []
     for i in range(1,7):
-        res += [computeIKOriented(0, 0, 0, i, params)]
+        res += computeIKOriented(0, 0, 0, i, params)
     return res
+
+# def interpolate_mov(key_pos, mult):
+#     n = len(key_pos)
+#     x = np.linspace(0, 1, n)
+#     inter_x = np.linspace(0, 1, n*multi)
+#     inter_y = np.interp()
+
+
+# x = np.linspace(0, 2*np.pi, 10)
+
+# y = np.sin(x)
+
+# xvals = np.linspace(0, 2*np.pi, 50)
+
+# yinterp = np.interp(xvals, x, y)
+
+# import matplotlib.pyplot as plt
+
+# plt.plot(x, y, 'o')
+# [<matplotlib.lines.Line2D object at 0x...>]
+
+# plt.plot(xvals, yinterp, '-x')
+# [<matplotlib.lines.Line2D object at 0x...>]
