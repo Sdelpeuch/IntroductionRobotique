@@ -102,6 +102,25 @@ def inverseUpdate(controls):
         controls[3], [x, y, z+0.1], p.getQuaternionFromEuler([0, 0, 0]))
     return x, y, z
 
+last_angles = []
+
+def from_list_to_simu(list_of_angles):
+    global last_angles
+    for step in list_of_angles:
+        smooth_steps = kinematics.make_smooth(step, last_angles)
+        last_angles = step
+        # smooth_steps = [step]
+        for smooth_step in smooth_steps:
+            for leg_id in range(1, 7):
+                index = (leg_id - 1) * 3
+                alphas = [smooth_step[index],
+                          smooth_step[index + 1],
+                          smooth_step[index + 2]]
+                set_leg_angles(alphas, leg_id, targets, params)
+                state = sim.setJoints(targets)
+                time.sleep(dt)
+                sim.tick()
+
 if args.mode == "frozen-direct":
     crosses = []
     for i in range(4):
@@ -139,6 +158,7 @@ elif args.mode == "walk":
 dt = 1/10000
 
 while True:
+    tick = 1
     targets = {}
     for name in sim.getJoints():
         if "c1" in name or "thigh" in name or "tibia" in name:
