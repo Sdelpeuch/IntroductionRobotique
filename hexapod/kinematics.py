@@ -1,10 +1,19 @@
-# not empty file
-import numpy as np 
+import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as R
 import math
 
 import constants
+
+
+def custom_print(string, to_print=0):
+    """
+    just a function to print only if to_print = 1
+    to_print is 0 by default
+    for verbose purpose
+    """
+    if (to_print == 1):
+        print(string)
 
 # # C'est ce qu'on a fait, ça ne marche pas (à comparer pour répondre aux questions du prof)
 # def inverse(x, y, z, verbose=True, use_rads=True):
@@ -65,9 +74,9 @@ def computeIKOriented(x, y, z, leg_id, params, verbose=True, extra_angle = 0):
     pos_ini = params.initLeg[leg_id-1] + [params.z]
 
     if verbose:
-        print(np.array(pos))
-        print(np.array(pos_ini))
-        print(np.array(pos) + np.array(pos_ini))
+        custom_print(np.array(pos))
+        custom_print(np.array(pos_ini))
+        custom_print(np.array(pos) + np.array(pos_ini))
     
     res = rot.dot(np.array(pos)) + np.array(pos_ini)
     return computeIK(*res)
@@ -210,7 +219,7 @@ def computeIK(
             ),
         ]
     if verbose:
-        print(
+        custom_print(
             "Asked IK for x={}, y={}, z={}\n, --> theta1={}, theta2={}, theta3={}".format(
                 x,
                 y,
@@ -344,12 +353,12 @@ dict_items([(1, [id: 11, goal_position: 0, present_position: 0,
 
 def setPositionToRobotLeg(Theta1, Theta2, Theta3, leg, robot):
     # modifie les consignes du robot pour une jambe
-    print(robot.legs.items()) # Avant
+    custom_print(robot.legs.items()) # Avant
     for v in robot.legs[leg]:
         v[0].goal_position = Theta1
         v[1].goal_position = Theta2
         v[2].goal_position = Theta3
-    print(robot.legs.items()) # Après
+    custom_print(robot.legs.items()) # Après
 
 def setPositionToRobot(robot, params):
     # Délai entre deux consignes pour le robot, en secondes
@@ -374,6 +383,7 @@ def walkDistanceAngle(dist, angle, step_dist, step_height, params):
 
     nb_step = dist//step_dist
     reste = dist - (nb_step*step_dist)
+    custom_print(res, 1)
 
     # first half-step
 

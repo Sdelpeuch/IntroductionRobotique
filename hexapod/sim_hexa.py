@@ -247,4 +247,7 @@ while True:
         # )
 
         state = sim.setJoints(targets)
+    elif args.mode == "walk":
+        kinematics.walkDistanceAngle(10,10,10,10,params)
+        exit(0)
     sim.tick()
