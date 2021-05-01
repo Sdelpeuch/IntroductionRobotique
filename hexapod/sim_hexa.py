@@ -7,7 +7,7 @@ import argparse
 import pybullet as p
 from onshape_to_robot.simulation import Simulation
 
-#import mouse
+import mouse
 
 import kinematics
 from constants import *
@@ -63,7 +63,6 @@ def set_leg_angles(alphas, leg_id, targets, params):
         i += 1
         targets[name] = alphas[i]
 
-
 # m_friction
 parser = argparse.ArgumentParser()
 parser.add_argument("--mode", "-m", type=str, default="direct", help="test")
@@ -109,7 +108,7 @@ if args.mode == "frozen-direct":
         crosses.append(p.loadURDF("target2/robot.urdf"))
     for name in sim.getJoints():
         print(name)
-        
+
         if "c1" in name or "thigh" in name or "tibia" in name:
             controls[name] = p.addUserDebugParameter(name, -math.pi, math.pi, 0)
 elif args.mode == "direct":
@@ -134,6 +133,10 @@ elif args.mode == "mouse":
     # mouse.verboseMapping(1, 0, 10, 0, 100)
     # mouse.verboseMapping(5, 0, 10, -50, 50)
 
+elif args.mode == "walk":
+    last_angles = 18 * [0]
+dt = 0.01
+
 while True:
     targets = {}
     for name in sim.getJoints():
@@ -149,7 +152,7 @@ while True:
             targets["j_tibia_rf"],
             use_rads=True,
         )
-        
+
         # points = LEG_CENTER_POS # --> met une croix sur les 6 épaules (mettre leg_angle à 0)
         # i = -1
         # T = []
@@ -179,7 +182,7 @@ while True:
             targets[name] = p.readUserDebugParameter(controls[name])
             print("name:", name, ", valeur:", targets[name])
         state = sim.setJoints(targets)
-    
+
     elif args.mode == "inverse":
         x = p.readUserDebugParameter(controls["target_x"])
         y = p.readUserDebugParameter(controls["target_y"])
@@ -187,7 +190,7 @@ while True:
         # Use your own IK function
         alphas = kinematics.computeIK(x, y, z, verbose=True, use_rads=True)
 
-        points = kinematics.computeDKDetailed(alphas[0], alphas[1], alphas[2]) 
+        points = kinematics.computeDKDetailed(alphas[0], alphas[1], alphas[2])
         print_points(points)
 
         targets["j_c1_rf"] = alphas[0]
@@ -217,34 +220,56 @@ while True:
                 leg_id,
                 params,
                 verbose=False,
-            )   
+            )
             set_leg_angles(alphas, leg_id, targets, params)
         # sim.setRobotPose(
         #     [0, 0, 0.5],
         #     to_pybullet_quaternion(0, 0, 0),
         # )
         state = sim.setJoints(targets)
-    
-    # elif args.mode == "mouse":
-    #     # mouse
-    #     mp = mouse.getMousePosition()
-    #     mouse_x, mouse_y = mouse.mappingPad(mp[0], 0, 768, -0.1, 0.1), mouse.mappingPad(mp[1], 0, 1366, -0.1, 0.1)
-    #     # Use your own IK function
-    #     for leg_id in range(1, 7):
-    #         alphas = kinematics.computeIKOriented(
-    #             mouse_x,
-    #             mouse_y,
-    #             keys_z,
-    #             leg_id,
-    #             params,
-    #             verbose=False,
-    #         )
-    #         set_leg_angles(alphas, leg_id, targets, params)
-        
-    #     # sim.setRobotPose(
-    #     #     [0, 0, 0.5],
-    #     #     to_pybullet_quaternion(0, 0, 0),
-    #     # )
 
-    #     state = sim.setJoints(targets)
+    elif args.mode == "mouse":
+        # mouse
+        mp = mouse.getMousePosition()
+        mouse_x, mouse_y = mouse.mappingPad(mp[0], 0, 768, -0.1, 0.1), mouse.mappingPad(mp[1], 0, 1366, -0.1, 0.1)
+        # Use your own IK function
+        for leg_id in range(1, 7):
+            alphas = kinematics.computeIKOriented(
+                mouse_x,
+                mouse_y,
+                keys_z,
+                leg_id,
+                params,
+                verbose=False,
+            )
+            set_leg_angles(alphas, leg_id, targets, params)
+
+        # sim.setRobotPose(
+        #     [0, 0, 0.5],
+        #     to_pybullet_quaternion(0, 0, 0),
+        # )
+
+        state = sim.setJoints(targets)
+    elif args.mode == "walk":
+        t = time.time()
+        sample = kinematics.walkDistanceAngle(5, 0, 0.1, 0.1, params)
+        print("time to compute :", time.time() - t)
+        # print("sample : ", sample)
+        t = time.time()
+        for step in sample:
+            # smooth_steps = kinematics.make_smooth(step, last_angles)
+            last_angles = step
+            smooth_steps = [step]
+            for smooth_step in smooth_steps:
+                for leg_id in range(1, 7):
+                    index = (leg_id-1)*3
+                    alphas = [smooth_step[index],
+                              smooth_step[index+1],
+                              smooth_step[index+2]]
+                    set_leg_angles(alphas, leg_id, targets, params)
+                    state = sim.setJoints(targets)
+                    time.sleep(dt)
+                    sim.tick()
+        print("time to compute all:", time.time() - t)
+        time.sleep(2)
     sim.tick()
