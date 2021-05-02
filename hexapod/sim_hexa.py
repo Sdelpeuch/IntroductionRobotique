@@ -155,9 +155,9 @@ elif args.mode == "mouse":
 elif args.mode == "walk":
     last_angles = 18 * [0]
 
-dt = 1/10000
+dt = 1/100000
 
-while True:
+while True and args.mode != "walk":
     tick = 1
     targets = {}
     for name in sim.getJoints():
@@ -271,26 +271,29 @@ while True:
         # )
 
         state = sim.setJoints(targets)
-    elif args.mode == "walk":
-        t = time.time()
-        sample = kinematics.walkDistanceAngle(2, 0, 0.1, 0.1, params)
-        print("time to compute :", time.time() - t)
-        # print("sample : ", sample)
-        t = time.time()
-        for step in sample:
-            smooth_steps = kinematics.make_smooth(step, last_angles)
-            last_angles = step
-            # smooth_steps = [step]
-            for smooth_step in smooth_steps:
-                for leg_id in range(1, 7):
-                    index = (leg_id-1)*3
-                    alphas = [smooth_step[index],
-                              smooth_step[index+1],
-                              smooth_step[index+2]]
-                    set_leg_angles(alphas, leg_id, targets, params)
-                    state = sim.setJoints(targets)
-                    time.sleep(dt)
-                    sim.tick()
-        print("time to compute all:", time.time() - t)
-        time.sleep(2)
+
     sim.tick()
+
+if args.mode == "walk":
+    tick = 1
+    targets = {}
+    t = time.time()
+    sample = kinematics.walkDistanceAngle(1, 0, 0.2, 0.1, params)
+    print("time to compute :", time.time() - t)
+    # print("sample : ", sample)
+    t = time.time()
+    for step in sample:
+        smooth_steps = kinematics.make_smooth(step, last_angles)
+        last_angles = step
+        # smooth_steps = [step]
+        for smooth_step in smooth_steps:
+            for leg_id in range(1, 7):
+                index = (leg_id-1)*3
+                alphas = [smooth_step[index],
+                          smooth_step[index+1],
+                          smooth_step[index+2]]
+                set_leg_angles(alphas, leg_id, targets, params)
+                state = sim.setJoints(targets)
+                time.sleep(dt)
+                sim.tick()
+    print("time to compute all:", time.time() - t)
