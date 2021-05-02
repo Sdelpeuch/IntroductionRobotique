@@ -43,3 +43,4 @@ de temps les fonctions sur l'hexapode sont disponibles uniquement en simulation.
 - Configurable walk (speed, frequency, length, height of the steps. Default body position, etc) ✅ `python3 sim_hexa.py -m walk-configurable`
 - Legs move smoothly (ask me about this) 
 - The robot can change its direction on the go
+- Jump ✅ `python3 sim_hexa.py -m walk-jump`
