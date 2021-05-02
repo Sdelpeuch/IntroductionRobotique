@@ -46,7 +46,6 @@ class Parameters:
 def to_pybullet_quaternion(roll, pitch, yaw, degrees=False):
     # q = Quaternion.from_euler(roll, pitch, yaw, degrees=degrees)
     # return [q[1], q[2], q[3], q[0]]
-
     # Create a rotation object from Euler angles specifying axes of rotation
     rot = Rotation.from_euler("xyz", [roll, pitch, yaw], degrees=degrees)
 
@@ -55,7 +54,12 @@ def to_pybullet_quaternion(roll, pitch, yaw, degrees=False):
     # print(rot_quat)
     return rot_quat
 
+
 def attack(params):
+    """
+    Idle position.
+    Its body moves with a little sinus and its front legs wave as if it was attacking someone
+    """
     angles=[]
     t = time.time()
     for leg_id in range(1, 7):
@@ -80,6 +84,7 @@ def attack(params):
         set_leg_angles(alphas, leg_id, targets, params)
     state = sim.setJoints(targets)
     sim.tick()
+
 
 def holowalk(x_speed, y_speed, th_speed, behaviour, params):
     if x_speed == 0 and y_speed == 0 and th_speed == 0 and behaviour != "JUMP":
@@ -106,7 +111,6 @@ def holowalk(x_speed, y_speed, th_speed, behaviour, params):
         return "JUMP", kinematics.jump(params=params)
 
 
-
 # Updates the values of the dictionnary targets to set 3 angles to a given leg
 def set_leg_angles(alphas, leg_id, targets, params):
     leg = params.legs[leg_id]
@@ -114,6 +118,7 @@ def set_leg_angles(alphas, leg_id, targets, params):
     for name in leg:
         i += 1
         targets[name] = alphas[i]
+
 
 # m_friction
 parser = argparse.ArgumentParser()
@@ -129,6 +134,7 @@ sim.setRobotPose([0, 0, 0.5], [0, 0, 0, 1])
 leg_center_pos = [0.1248, -0.06164, 0.001116 + 0.5]
 leg_angle = -math.pi / 4
 params = Parameters()
+
 
 def print_points(points):
     i = -1
@@ -203,9 +209,6 @@ elif args.mode == "inverse":
     controls["target_y"] = p.addUserDebugParameter("target_y", -0.4, 0.4, alphas[1])
     controls["target_z"] = p.addUserDebugParameter("target_z", -0.4, 0.4, alphas[2])
 
-elif args.mode == "mouse":
-    keys_z = -0.01
-
 elif args.mode == "walk" or args.mode == "rotate":
     last_angles = 18 * [0]
 
@@ -229,6 +232,7 @@ while True and "walk" not in args.mode and "holo" not in args.mode and "rotate" 
     for name in sim.getJoints():
         if "c1" in name or "thigh" in name or "tibia" in name:
             targets[name] = 0
+
     if args.mode == "frozen-direct":
         for name in controls.keys():
             targets[name] = p.readUserDebugParameter(controls[name])
@@ -240,21 +244,6 @@ while True and "walk" not in args.mode and "holo" not in args.mode and "rotate" 
             use_rads=True,
         )
 
-        # points = LEG_CENTER_POS # --> met une croix sur les 6 épaules (mettre leg_angle à 0)
-        # i = -1
-        # T = []
-        # print("#####")
-        # for pt in points:
-        #     # Drawing each step of the DK calculation
-        #     i += 1
-        #     T.append(kinematics.rotaton_2D(pt[0], pt[1] , pt[2], leg_angle))
-        #     T[-1][0] += leg_center_pos[0] # Ajout l'offset de l'épaule
-        #     T[-1][1] += leg_center_pos[1]
-        #     T[-1][2] += leg_center_pos[2]
-        #     print("Drawing cross {} at {}".format(i, T[-1]))
-        #     p.resetBasePositionAndOrientation(
-        #         crosses[i], T[-1], to_pybullet_quaternion(0, 0, leg_angle)
-        #     )
         print_points(points)
 
         sim.setRobotPose(
@@ -262,12 +251,14 @@ while True and "walk" not in args.mode and "holo" not in args.mode and "rotate" 
             to_pybullet_quaternion(0, 0, 0),
         )
         state = sim.setJoints(targets)
+
     elif args.mode == "keyboard":
-        # Affcihe le code de la touche appuyée
+        # Affiche le code de la touche appuyée
+        # Mode simplement utilise pendant le développement
         keys = p.getKeyboardEvents()
         print(keys)
-    elif args.mode == "direct":
 
+    elif args.mode == "direct":
         for name in controls.keys():
             targets[name] = p.readUserDebugParameter(controls[name])
             print("name:", name, ", valeur:", targets[name])
@@ -299,8 +290,8 @@ while True and "walk" not in args.mode and "holo" not in args.mode and "rotate" 
         p.resetBasePositionAndOrientation(
             crosses [-1], T, to_pybullet_quaternion(0, 0, leg_angle)
         )
+
     elif args.mode == "robot-ik":
-        None
         # Use your own IK function
         for leg_id in range(1, 7):
             alphas = kinematics.computeIKOriented(
@@ -319,9 +310,7 @@ while True and "walk" not in args.mode and "holo" not in args.mode and "rotate" 
         state = sim.setJoints(targets)
 
     elif args.mode == "robot-ik-keyboard":
-
         keys = p.getKeyboardEvents()
-
         if 122 in keys:
             x_body = min(x_body + value, max_value)
         if 115 in keys:
@@ -338,8 +327,7 @@ while True and "walk" not in args.mode and "holo" not in args.mode and "rotate" 
             z_body = max(z_body - value, params.z - max_value)
 
         # print("{}, {}, {}".format(x_body, y_body, z_body))
-
-        # Use your own IK function
+        
         for leg_id in range(1, 7):
             alphas = kinematics.computeIKOriented(
                 x_body,
@@ -357,33 +345,6 @@ while True and "walk" not in args.mode and "holo" not in args.mode and "rotate" 
         # )
         state = sim.setJoints(targets)
 
-    elif args.mode == "mouse":
-        # mouse
-        mp = mouse.getMousePosition()
-        mouse_x, mouse_y = mouse.mappingPad(mp[0], 0, 768, -0.1, 0.1), mouse.mappingPad(mp[1], 0, 1366, -0.1, 0.1)
-        # Use your own IK function
-        for leg_id in range(1, 7):
-            alphas = kinematics.computeIKOriented(
-                mouse_x,
-                mouse_y,
-                keys_z,
-                leg_id,
-                params,
-                verbose=False,
-            )
-            set_leg_angles(alphas, leg_id, targets, params)
-
-        # sim.setRobotPose(
-        #     [0, 0, 0.5],
-        #     to_pybullet_quaternion(0, 0, 0),
-        # )
-
-        state = sim.setJoints(targets)
-    elif args.mode == "walk-configurable":
-        angle = p.readUserDebugParameter(controls["angle"])
-        sample = kinematics.walkDistanceAngle(1, angle, 0.15, 0.1, params)
-        from_list_to_simu(sample)
-
     elif args.mode == "attack":
         angles = attack(params)
         for leg_id in range(1, 7):
@@ -399,8 +360,8 @@ while True and "walk" not in args.mode and "holo" not in args.mode and "rotate" 
             set_leg_angles(alphas, leg_id, targets, params)
         state = sim.setJoints(targets)
 
-
     sim.tick()
+
 
 if args.mode == "walk":
     tick = 1
