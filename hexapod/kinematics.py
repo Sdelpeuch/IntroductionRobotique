@@ -383,7 +383,7 @@ def walkDistanceAngle(dist, angle, step_dist, step_height, params):
     res = []
     nb_step = int(dist//step_dist)
 
-    for j in range(nb_step-1):
+    for _ in range(nb_step-1):
         calculated_angles = []
         for i in range(3):
             calculated_angles += computeIKOriented(0, 0, 0, i*2+1, params, extra_angle=angle)

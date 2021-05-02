@@ -118,8 +118,8 @@ def from_list_to_simu(list_of_angles):
                           smooth_step[index + 2]]
                 set_leg_angles(alphas, leg_id, targets, params)
                 state = sim.setJoints(targets)
-                time.sleep(dt)
                 sim.tick()
+                time.sleep(dt)
 
 if args.mode == "frozen-direct":
     crosses = []
@@ -157,12 +157,12 @@ elif args.mode == "walk":
 
 elif args.mode == "walk-configurable":
     last_angles = 18 * [0]
-    controls["angle"] = p.addUserDebugParameter("angle", 0, 2*math.pi, 0)
+    controls["angle"] = p.addUserDebugParameter("angle", 0, 360, 0)
 
 
 dt = 1/100000
 
-while True and args.mode != "walk":
+while True and "walk" not in args.mode:
     tick = 1
     targets = {}
     for name in sim.getJoints():
@@ -276,19 +276,27 @@ while True and args.mode != "walk":
         # )
 
         state = sim.setJoints(targets)
-    elif args.mode == "walk-configurable":
-        angle = p.readUserDebugParameter(controls["angle"])
-        sample = kinematics.walkDistanceAngle(1, angle, 0.15, 0.1, params)
-        from_list_to_simu(sample)
-    # sim.tick()
+        # time.sleep(dt)
+    sim.tick()
 
 if args.mode == "walk":
     tick = 1
     targets = {}
     t = time.time()
-    sample = kinematics.walkDistanceAngle(2, 0, 0.15, 0.1, params)
+    sample = kinematics.walkDistanceAngle(1, 0, 0.15, 0.1, params)
     print("time to compute :", time.time() - t)
     # print("sample : ", sample)
     t = time.time()
     from_list_to_simu(sample)
+    # sample = kinematics.walkDistanceAngle(1, math.pi/2, 0.15, 0.1, params)
+    # from_list_to_simu(sample)
+
     print("time to compute all:", time.time() - t)
+
+elif args.mode == "walk-configurable":
+    tick = 1
+    targets = {}
+    while(1):
+        angle = (math.pi/180)*p.readUserDebugParameter(controls["angle"])
+        sample = kinematics.walkDistanceAngle(0.3, angle, 0.15, 0.1, params)
+        from_list_to_simu(sample)
