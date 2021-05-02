@@ -427,6 +427,7 @@ def rotate(angle, max_step_dist, step_height, params, l_corner = 0.21, l_side = 
         calculated_angles += computeIK(math.cos(step_corner/2)*R_corner - l_corner, -math.sin(step_corner/2)*R_corner, params.z)
         calculated_angles += computeIK(math.cos(step_side/2)*R_side - l_side, math.sin(step_side/2)*R_side, params.z)
         res += [calculated_angles]
+    res += [toIniPos(params)]
 
     return res
 
@@ -435,7 +436,7 @@ def walkDistanceAngle(dist, angle, step_dist, step_height, params):
     Retourne un tableau contenant une successions des positions clefs des 18 angles 
     des steppers permettant la marche sur la distance dist avec un angle donné
     """
-    res = []
+    res = [toIniPos(params)]
     nb_step = int(dist//step_dist)
 
     for _ in range(nb_step-1):
@@ -578,7 +579,7 @@ def compute_pos_jump(period, dt):
     time = [0, 0.3, 0.4, 0.58] # in %
     x = [0, 0, 0, 0]
     y = [0, 0, 0, 0]
-    z = [-0.06, 0.03, -0.3, -0.06]
+    z = [-0.0, 0.11, -2, -0.0]
     
     lenght = int(1/dt)
     # time

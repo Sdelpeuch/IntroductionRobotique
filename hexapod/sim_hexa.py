@@ -19,7 +19,7 @@ from scipy.spatial.transform import Rotation
 class Parameters:
     def __init__(
         self,
-        z=-0.06,
+        z=-0.1,
     ):
         self.z = z
         # Angle between the X axis of the leg and the X axis of the robot for each leg
@@ -86,22 +86,22 @@ def holowalk(x_speed, y_speed, th_speed, behaviour, params):
         return "ATTACK", attack(params)
     elif x_speed != 0 or y_speed != 0:
         if x_speed > 0 and y_speed > 0:
-            return "WALK", kinematics.walkDistanceAngle(1, math.pi/4 , 0.15, 0.1, params)
+            return "WALK", kinematics.walkDistanceAngle(0.3, math.pi/4 , 0.15, 0.1, params)
         if x_speed < 0 and y_speed > 0:
-            return "WALK", kinematics.walkDistanceAngle(1, 3*math.pi/4 , 0.15, 0.1, params)
+            return "WALK", kinematics.walkDistanceAngle(0.3, 3*math.pi/4 , 0.15, 0.1, params)
         if x_speed < 0 and y_speed < 0:
-            return "WALK", kinematics.walkDistanceAngle(1, 5*math.pi/4 , 0.15, 0.1, params)
+            return "WALK", kinematics.walkDistanceAngle(0.3, 5*math.pi/4 , 0.15, 0.1, params)
         if x_speed > 0 and y_speed < 0:
-            return "WALK", kinematics.walkDistanceAngle(1, 7*math.pi/4 , 0.15, 0.1, params)
+            return "WALK", kinematics.walkDistanceAngle(0.3, 7*math.pi/4 , 0.15, 0.1, params)
 
         if x_speed > 0 and y_speed == 0:
-            return "WALK", kinematics.walkDistanceAngle(1, 0, 0.15, 0.1, params)
+            return "WALK", kinematics.walkDistanceAngle(0.3, 0, 0.15, 0.1, params)
         if x_speed < 0 and y_speed == 0:
-            return "WALK", kinematics.walkDistanceAngle(1, math.pi, 0.15, 0.1, params)
+            return "WALK", kinematics.walkDistanceAngle(0.3, math.pi, 0.15, 0.1, params)
         if x_speed == 0 and y_speed > 0:
-            return "WALK", kinematics.walkDistanceAngle(1, math.pi/2, 0.15, 0.1, params)
+            return "WALK", kinematics.walkDistanceAngle(0.3, math.pi/2, 0.15, 0.1, params)
         if x_speed == 0 and y_speed < 0:
-            return "WALK", kinematics.walkDistanceAngle(1, 3*math.pi/2, 0.15, 0.1, params)
+            return "WALK", kinematics.walkDistanceAngle(0.3, 3*math.pi/2, 0.15, 0.1, params)
     elif behaviour == "JUMP":
         return "JUMP", kinematics.jump(params=params)
 
@@ -466,7 +466,9 @@ elif args.mode == "holo":
         behaviour, angles = holowalk(x_speed, y_speed, th_speed, behaviour, params)
         if behaviour == "ATTACK":
             attack(params)
-        elif behaviour == "WALK" or behaviour == "JUMP":
+        elif behaviour == "WALK" :
+            from_list_to_simu(angles)
+        elif behaviour == "JUMP":
             from_list_to_simu(angles)
             behaviour = "ATTACK"
 
