@@ -154,11 +154,10 @@ def inverseUpdate(controls):
         controls[3], [x, y, z+0.1], p.getQuaternionFromEuler([0, 0, 0]))
     return x, y, z
 
-last_angles = []
-
 def from_list_to_simu(list_of_angles):
     global last_angles
     for step in list_of_angles:
+        #print("len : ", len(last_angles), len(step))
         smooth_steps = kinematics.make_smooth(step, last_angles, smooth_num=10)
         last_angles = step
         # smooth_steps = [step]
@@ -206,7 +205,7 @@ elif args.mode == "inverse":
 elif args.mode == "mouse":
     keys_z = -0.01
 
-elif args.mode == "walk":
+elif args.mode == "walk" or args.mode == "rotate":
     last_angles = 18 * [0]
 
 elif args.mode == "walk-configurable":
@@ -222,7 +221,7 @@ elif args.mode == "walk-jump":
 
 dt = 1/10000
 
-while True and "walk" not in args.mode and "holo" not in args.mode:
+while True and "walk" not in args.mode and "holo" not in args.mode and "rotate" not in args.mode:
     tick = 1
     targets = {}
     for name in sim.getJoints():
@@ -401,13 +400,23 @@ if args.mode == "walk":
     tick = 1
     targets = {}
     t = time.time()
-    sample = kinematics.walkDistanceAngle(1, 0, 0.15, 0.1, params)
+    sample = kinematics.walkDistanceAngle(1.5, 0, 0.15, 0.1, params)
     print("time to compute :", time.time() - t)
     # print("sample : ", sample)
     t = time.time()
+    print("time to compute all:", time.time() - t)
     from_list_to_simu(sample)
 
+elif args.mode == "rotate":
+    tick = 1
+    targets = {}
+    t = time.time()
+    sample = kinematics.rotate(math.pi/2, 0.1, 0.1, params)
+    print("time to compute :", time.time() - t)
+    print("sample : ", sample)
+    t = time.time()
     print("time to compute all:", time.time() - t)
+    from_list_to_simu(sample)
 
 elif args.mode == "walk-configurable":
     def speed_to_params(speed):
