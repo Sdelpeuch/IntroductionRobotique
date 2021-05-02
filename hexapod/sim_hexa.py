@@ -155,6 +155,11 @@ elif args.mode == "mouse":
 elif args.mode == "walk":
     last_angles = 18 * [0]
 
+elif args.mode == "walk-configurable":
+    last_angles = 18 * [0]
+    controls["angle"] = p.addUserDebugParameter("angle", 0, 2*math.pi, 0)
+
+
 dt = 1/100000
 
 while True and args.mode != "walk":
@@ -271,8 +276,11 @@ while True and args.mode != "walk":
         # )
 
         state = sim.setJoints(targets)
-
-    sim.tick()
+    elif args.mode == "walk-configurable":
+        angle = p.readUserDebugParameter(controls["angle"])
+        sample = kinematics.walkDistanceAngle(1, angle, 0.15, 0.1, params)
+        from_list_to_simu(sample)
+    # sim.tick()
 
 if args.mode == "walk":
     tick = 1
