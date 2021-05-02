@@ -104,7 +104,7 @@ def inverseUpdate(controls):
 
 last_angles = []
 
-def from_list_to_simu(list_of_angles):
+def from_list_to_simu(list_of_angles, dt = 1/1000):
     global last_angles
     for step in list_of_angles:
         smooth_steps = kinematics.make_smooth(step, last_angles, smooth_num=10)
@@ -158,10 +158,10 @@ elif args.mode == "walk":
 elif args.mode == "walk-configurable":
     last_angles = 18 * [0]
     controls["angle"] = p.addUserDebugParameter("angle", 0, 360, 0)
-    controls["speed"] = p.addUserDebugParameter("speed (%)", 0, 1, 0)
+    controls["step_dist"] = p.addUserDebugParameter("step distance", 0, 0.3, 0)
+    controls["freq"] = p.addUserDebugParameter("frequence", 100, 10000, 5000)
 
-
-dt = 1/100000
+dt = 1/1000
 
 while True and "walk" not in args.mode:
     tick = 1
@@ -295,19 +295,27 @@ if args.mode == "walk":
     print("time to compute all:", time.time() - t)
 
 elif args.mode == "walk-configurable":
-    def speed_to_params(speed):
-        # speed en %
-        min_step_dist = 0.02
-        max_step_dist = 0.1
-        step_dist = max_step_dist * speed
-        if step_dist < min_step_dist:
-            step_dist = min_step_dist
-        return step_dist
+    def waiting():
+        for leg_id in range(1,7):
+            alphas = kinematics.computeIKOriented(
+                0,
+                0,
+                0,
+                leg_id,
+                params,
+                verbose=False,
+            )
+            set_leg_angles(alphas, leg_id, targets, params)
+            sim.tick()
+            time.sleep(dt)
     tick = 1
     targets = {}
     while(1):
-        print("im in while")
         angle = (math.pi/180)*p.readUserDebugParameter(controls["angle"])
-        step_dist = speed_to_params(p.readUserDebugParameter(controls["speed"]))
-        sample = kinematics.walkDistanceAngle(step_dist*2, angle, step_dist, 0.1, params)
-        from_list_to_simu(sample)
+        step_dist = p.readUserDebugParameter(controls["step_dist"])
+        dt_factor = p.readUserDebugParameter(controls["freq"])
+        if step_dist != 0:
+            sample = kinematics.walkDistanceAngle(step_dist*2, angle, step_dist, 0.1, params)
+            from_list_to_simu(sample, 1/dt_factor)
+        else:
+            waiting()
