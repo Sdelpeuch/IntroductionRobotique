@@ -107,7 +107,7 @@ last_angles = []
 def from_list_to_simu(list_of_angles):
     global last_angles
     for step in list_of_angles:
-        smooth_steps = kinematics.make_smooth(step, last_angles)
+        smooth_steps = kinematics.make_smooth(step, last_angles, smooth_num=10)
         last_angles = step
         # smooth_steps = [step]
         for smooth_step in smooth_steps:
@@ -158,6 +158,7 @@ elif args.mode == "walk":
 elif args.mode == "walk-configurable":
     last_angles = 18 * [0]
     controls["angle"] = p.addUserDebugParameter("angle", 0, 360, 0)
+    controls["speed"] = p.addUserDebugParameter("speed (%)", 0, 1, 0)
 
 
 dt = 1/100000
@@ -294,9 +295,19 @@ if args.mode == "walk":
     print("time to compute all:", time.time() - t)
 
 elif args.mode == "walk-configurable":
+    def speed_to_params(speed):
+        # speed en %
+        min_step_dist = 0.02
+        max_step_dist = 0.1
+        step_dist = max_step_dist * speed
+        if step_dist < min_step_dist:
+            step_dist = min_step_dist
+        return step_dist
     tick = 1
     targets = {}
     while(1):
+        print("im in while")
         angle = (math.pi/180)*p.readUserDebugParameter(controls["angle"])
-        sample = kinematics.walkDistanceAngle(0.3, angle, 0.15, 0.1, params)
+        step_dist = speed_to_params(p.readUserDebugParameter(controls["speed"]))
+        sample = kinematics.walkDistanceAngle(step_dist*2, angle, step_dist, 0.1, params)
         from_list_to_simu(sample)
