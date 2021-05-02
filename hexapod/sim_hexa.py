@@ -55,6 +55,14 @@ def to_pybullet_quaternion(roll, pitch, yaw, degrees=False):
     # print(rot_quat)
     return rot_quat
 
+def say_hello(legs_id, params):
+    t = time.time()
+    if leg_id == 3 or leg_id == 6:
+        return 0.05 * math.cos(t), 0.05 * math.cos(t), 0.1+ 0.5* math.fabs(math.cos(t))
+    else :
+        return 0.01 * math.cos(t), 0.01 * math.cos(t), 0
+
+
 # Updates the values of the dictionnary targets to set 3 angles to a given leg
 def set_leg_angles(alphas, leg_id, targets, params):
     leg = params.legs[leg_id]
@@ -277,7 +285,26 @@ while True and "walk" not in args.mode:
         # )
 
         state = sim.setJoints(targets)
-        # time.sleep(dt)
+    elif args.mode == "walk-configurable":
+        angle = p.readUserDebugParameter(controls["angle"])
+        sample = kinematics.walkDistanceAngle(1, angle, 0.15, 0.1, params)
+        from_list_to_simu(sample)
+
+    elif args.mode == "hello":
+        for leg_id in range(1, 7):
+            x, y, z = say_hello(leg_id,params)
+            alphas = kinematics.computeIKOriented(
+                x,
+                y,
+                z,
+                leg_id,
+                params,
+                verbose=False,
+            )
+            set_leg_angles(alphas, leg_id, targets, params)
+        state = sim.setJoints(targets)
+
+
     sim.tick()
 
 if args.mode == "walk":
