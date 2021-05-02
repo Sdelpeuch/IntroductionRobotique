@@ -100,7 +100,7 @@ class SimpleRobot:
             6: [SimpleMotor(2), SimpleMotor(4), SimpleMotor(6)],
         }
         self.delay_after_write = 0.01
-        self.params = None
+        self.params = Parameters()
 
     def __repr__(self):
         output = "##### Robot #####\n"

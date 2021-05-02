@@ -20,9 +20,9 @@ USE_MM_INPUT = False
 USE_MM_OUTPUT = False
 
 if ROBOT_TYPE == PHANTOMX:
-    constL1 = 0.001 * 54.8
-    constL2 = 0.001 * 65.3
-    constL3 = 0.001 * 133
+    constL1 = 0.001*54.8
+    constL2 = 0.001*65.3
+    constL3 = 0.001*133
     theta2Correction = 16.0 * math.pi / 180.0
     theta2ExtraCorrection = 0
     theta3Correction = 43.76 * math.pi / 180.0  # -theta2Correction ??
@@ -31,7 +31,7 @@ if ROBOT_TYPE == PHANTOMX:
     THETA1_MOTOR_SIGN = 1
     USE_RADS_INPUT = False
     USE_RADS_OUTPUT = False
-    USE_MM_INPUT = False
+    USE_MM_INPUT = True
     USE_MM_OUTPUT = False
     Z_DIRECTION = -1
     LEG_ANGLES = [
