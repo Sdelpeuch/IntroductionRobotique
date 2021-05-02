@@ -427,19 +427,6 @@ elif args.mode == "rotate":
     from_list_to_simu(sample)
 
 elif args.mode == "walk-configurable":
-    def waiting():
-        for leg_id in range(1,7):
-            alphas = kinematics.computeIKOriented(
-                0,
-                0,
-                0,
-                leg_id,
-                params,
-                verbose=False,
-            )
-            set_leg_angles(alphas, leg_id, targets, params)
-            sim.tick()
-            time.sleep(dt)
     tick = 1
     targets = {}
     while(1):
@@ -450,10 +437,7 @@ elif args.mode == "walk-configurable":
             sample = kinematics.walkDistanceAngle(step_dist*2, angle, step_dist, 0.1, params)
             from_list_to_simu(sample, 1/dt_factor)
         else:
-            waiting()
-        step_dist = speed_to_params(p.readUserDebugParameter(controls["speed"]))
-        sample = kinematics.walkDistanceAngle(step_dist*2, angle, step_dist, 0.1, params)
-        from_list_to_simu(sample)
+            attack(params)
 
 elif args.mode == "holo":
     tick = 1
