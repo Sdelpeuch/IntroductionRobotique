@@ -102,12 +102,14 @@ def inverseUpdate(controls):
         controls[3], [x, y, z+0.1], p.getQuaternionFromEuler([0, 0, 0]))
     return x, y, z
 
-last_angles = []
+last_angles = 18 * [0]
+dt = 1/100000
 
 def from_list_to_simu(list_of_angles):
     global last_angles
     for step in list_of_angles:
-        smooth_steps = kinematics.make_smooth(step, last_angles)
+        #print("len : ", len(last_angles), len(step))
+        smooth_steps = kinematics.make_smooth(step, last_angles, smooth_num=10)
         last_angles = step
         # smooth_steps = [step]
         for smooth_step in smooth_steps:
@@ -152,12 +154,7 @@ elif args.mode == "mouse":
     # mouse.verboseMapping(1, 0, 10, 0, 100)
     # mouse.verboseMapping(5, 0, 10, -50, 50)
 
-elif args.mode == "walk":
-    last_angles = 18 * [0]
-
-dt = 1/100000
-
-while True and args.mode != "walk":
+while True and args.mode != "walk" and args.mode != "rotate":
     tick = 1
     targets = {}
     for name in sim.getJoints():
@@ -278,9 +275,21 @@ if args.mode == "walk":
     tick = 1
     targets = {}
     t = time.time()
-    sample = kinematics.walkDistanceAngle(2, 0, 0.15, 0.1, params)
+    sample = kinematics.walkDistanceAngle(1.5, 0, 0.15, 0.1, params)
     print("time to compute :", time.time() - t)
     # print("sample : ", sample)
     t = time.time()
-    from_list_to_simu(sample)
     print("time to compute all:", time.time() - t)
+    from_list_to_simu(sample)
+
+if args.mode == "rotate":
+    tick = 1
+    targets = {}
+    t = time.time()
+    sample = kinematics.rotate(math.pi/2, 0.1, 0.1, params)
+    print("time to compute :", time.time() - t)
+    print("sample : ", sample)
+    t = time.time()
+    print("time to compute all:", time.time() - t)
+    from_list_to_simu(sample)
+    
