@@ -295,7 +295,8 @@ while True and "walk" not in args.mode:
         if 97 in keys:
             z_body = max(z_body - value, params.z - max_value)
 
-        print("{}, {}, {}".format(x_body, y_body, z_body))
+        # print("{}, {}, {}".format(x_body, y_body, z_body))
+        
         # Use your own IK function
         for leg_id in range(1, 7):
             alphas = kinematics.computeIKOriented(
@@ -306,6 +307,7 @@ while True and "walk" not in args.mode:
                 params,
                 verbose=False,
             )
+
             set_leg_angles(alphas, leg_id, targets, params)
         # sim.setRobotPose(
         #     [0, 0, 0.5],
