@@ -143,6 +143,12 @@ elif args.mode == "direct":
         print(name)
         if "c1" in name or "thigh" in name or "tibia" in name:
             controls[name] = p.addUserDebugParameter(name, -math.pi, math.pi, 0)
+
+elif args.mode == "robot-ik-keyboard":
+    x_body, y_body, z_body = 0, 0, params.z
+    max_value = 0.05
+    value = 0.001
+
 elif args.mode == "inverse":
     crosses = []
     for i in range(5):
@@ -156,10 +162,6 @@ elif args.mode == "inverse":
 elif args.mode == "mouse":
     keys_z = -0.01
 
-    # test mapping pad
-    # mouse.verboseMapping(1, 0, 10, 0, 100)
-    # mouse.verboseMapping(5, 0, 10, -50, 50)
-
 elif args.mode == "walk":
     last_angles = 18 * [0]
 
@@ -168,8 +170,10 @@ elif args.mode == "walk-configurable":
     controls["angle"] = p.addUserDebugParameter("angle", 0, 360, 0)
     controls["speed"] = p.addUserDebugParameter("speed (%)", 0, 1, 0)
 
+elif args.mode == "walk-jump":
+    last_angles = 18 * [0]
 
-dt = 1/100000
+dt = 1/10000
 
 while True and "walk" not in args.mode:
     tick = 1
@@ -210,7 +214,10 @@ while True and "walk" not in args.mode:
             to_pybullet_quaternion(0, 0, 0),
         )
         state = sim.setJoints(targets)
-
+    elif args.mode == "keyboard":
+        # Affcihe le code de la touche appuyée
+        keys = p.getKeyboardEvents()
+        print(keys)
     elif args.mode == "direct":
 
         for name in controls.keys():
@@ -263,6 +270,43 @@ while True and "walk" not in args.mode:
         # )
         state = sim.setJoints(targets)
 
+    elif args.mode == "robot-ik-keyboard":
+        
+        keys = p.getKeyboardEvents()
+
+        if 122 in keys:
+            x_body = min(x_body + value, max_value)
+        if 115 in keys:
+            x_body = max(x_body - value, - max_value)
+        
+        if 113 in keys:
+            y_body = min(y_body + value, max_value)
+        if 100 in keys:
+            y_body = max(y_body - value, - max_value)
+
+        if 101 in keys:
+            z_body = min(z_body + value, params.z + max_value)
+        if 97 in keys:
+            z_body = max(z_body - value, params.z - max_value)
+
+        print("{}, {}, {}".format(x_body, y_body, z_body))
+        # Use your own IK function
+        for leg_id in range(1, 7):
+            alphas = kinematics.computeIKOriented(
+                x_body,
+                y_body,
+                z_body,
+                leg_id,
+                params,
+                verbose=False,
+            )
+            set_leg_angles(alphas, leg_id, targets, params)
+        # sim.setRobotPose(
+        #     [0, 0, 0.5],
+        #     to_pybullet_quaternion(0, 0, 0),
+        # )
+        state = sim.setJoints(targets)
+
     elif args.mode == "mouse":
         # mouse
         mp = mouse.getMousePosition()
@@ -285,10 +329,6 @@ while True and "walk" not in args.mode:
         # )
 
         state = sim.setJoints(targets)
-    elif args.mode == "walk-configurable":
-        angle = p.readUserDebugParameter(controls["angle"])
-        sample = kinematics.walkDistanceAngle(1, angle, 0.15, 0.1, params)
-        from_list_to_simu(sample)
 
     elif args.mode == "hello":
         for leg_id in range(1, 7):
@@ -304,7 +344,7 @@ while True and "walk" not in args.mode:
             set_leg_angles(alphas, leg_id, targets, params)
         state = sim.setJoints(targets)
 
-
+        time.sleep(2)
     sim.tick()
 
 if args.mode == "walk":
@@ -316,8 +356,6 @@ if args.mode == "walk":
     # print("sample : ", sample)
     t = time.time()
     from_list_to_simu(sample)
-    # sample = kinematics.walkDistanceAngle(1, math.pi/2, 0.15, 0.1, params)
-    # from_list_to_simu(sample)
 
     print("time to compute all:", time.time() - t)
 
@@ -338,3 +376,14 @@ elif args.mode == "walk-configurable":
         step_dist = speed_to_params(p.readUserDebugParameter(controls["speed"]))
         sample = kinematics.walkDistanceAngle(step_dist*2, angle, step_dist, 0.1, params)
         from_list_to_simu(sample)
+
+elif args.mode == "walk-jump":
+    tick = 1
+    targets = {}
+    while(1):
+        keys = p.getKeyboardEvents()
+        # On trigger le jump que quand on release la barre espace
+        # Pour trigger quand on appuie dessus, mettre keys[32] == 3
+        if 32 in keys and keys[32] == 4:
+            sample = kinematics.jump(params=params)
+            from_list_to_simu(sample)
