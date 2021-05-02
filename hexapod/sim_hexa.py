@@ -56,17 +56,52 @@ def to_pybullet_quaternion(roll, pitch, yaw, degrees=False):
     return rot_quat
 
 def attack(params):
-    alphas=[]
+    angles=[]
+    t = time.time()
     for leg_id in range(1, 7):
-        t = time.time()
-        if leg_id == 1 or leg_id == 2 :
-            alphas.append([0.1 * math.fabs(math.tan(t)), 0, 0.1+ 0.2* math.fabs(math.cos(t))])
-        elif leg_id == 3 or leg_id == 6:
-             alphas.append([0.1,  0.01 * math.cos(t),  0.01 * math.cos(t)])
-        else :
-             alphas.append([0.01 * math.cos(t), 0.01 * math.cos(t), 0.01])
-    return alphas
 
+        if leg_id == 1 or leg_id == 2 :
+            angles.append([0.1 * math.fabs(math.tan(t)), 0, 0.1+ 0.2* math.fabs(math.cos(t))])
+        elif leg_id == 3 or leg_id == 6:
+             angles.append([0.1,  0.01 * math.cos(t),  0.01 * math.cos(t)])
+        else :
+             angles.append([0.01 * math.cos(t), 0.01 * math.cos(t), 0.01])
+
+    for leg_id in range(1, 7):
+        angle = angles[leg_id - 1]
+        alphas = kinematics.computeIKOriented(
+            angle[0],
+            angle[1],
+            angle[2],
+            leg_id,
+            params,
+            verbose=False,
+        )
+        set_leg_angles(alphas, leg_id, targets, params)
+    state = sim.setJoints(targets)
+    sim.tick()
+
+def holowalk(x_speed, y_speed, th_speed, behaviour, params):
+    if x_speed == 0 and y_speed == 0 and th_speed == 0:
+        return "ATTACK", attack(params)
+    elif x_speed != 0 or y_speed != 0:
+        if x_speed > 0 and y_speed > 0:
+            return "WALK", kinematics.walkDistanceAngle(1, math.pi/4 , 0.15, 0.1, params)
+        if x_speed < 0 and y_speed > 0:
+            return "WALK", kinematics.walkDistanceAngle(1, 3*math.pi/4 , 0.15, 0.1, params)
+        if x_speed < 0 and y_speed < 0:
+            return "WALK", kinematics.walkDistanceAngle(1, 5*math.pi/4 , 0.15, 0.1, params)
+        if x_speed > 0 and y_speed < 0:
+            return "WALK", kinematics.walkDistanceAngle(1, 7*math.pi/4 , 0.15, 0.1, params)
+
+        if x_speed > 0 and y_speed == 0:
+            return "WALK", kinematics.walkDistanceAngle(1, 0, 0.15, 0.1, params)
+        if x_speed < 0 and y_speed == 0:
+            return "WALK", kinematics.walkDistanceAngle(1, math.pi, 0.15, 0.1, params)
+        if x_speed == 0 and y_speed > 0:
+            return "WALK", kinematics.walkDistanceAngle(1, math.pi/2, 0.15, 0.1, params)
+        if x_speed == 0 and y_speed < 0:
+            return "WALK", kinematics.walkDistanceAngle(1, 3*math.pi/2, 0.15, 0.1, params)
 
 
 # Updates the values of the dictionnary targets to set 3 angles to a given leg
@@ -174,10 +209,13 @@ elif args.mode == "walk-configurable":
     controls["angle"] = p.addUserDebugParameter("angle", 0, 360, 0)
     controls["speed"] = p.addUserDebugParameter("speed (%)", 0, 1, 0)
 
+elif args.mode == "holo":
+    last_angles = 18 * [0]
+    behaviour = "ATTACK"
 
 dt = 1/100000
 
-while True and "walk" not in args.mode:
+while True and "walk" not in args.mode and "holo" not in args.mode:
     tick = 1
     targets = {}
     for name in sim.getJoints():
@@ -311,7 +349,6 @@ while True and "walk" not in args.mode:
             set_leg_angles(alphas, leg_id, targets, params)
         state = sim.setJoints(targets)
 
-
     sim.tick()
 
 if args.mode == "walk":
@@ -345,3 +382,33 @@ elif args.mode == "walk-configurable":
         step_dist = speed_to_params(p.readUserDebugParameter(controls["speed"]))
         sample = kinematics.walkDistanceAngle(step_dist*2, angle, step_dist, 0.1, params)
         from_list_to_simu(sample)
+
+elif args.mode == "holo":
+    tick = 1
+    targets = {}
+    t = time.time()
+    while True:
+        keys = p.getKeyboardEvents()
+        print(keys)
+        x_speed, y_speed, th_speed = 0, 0, 0
+        if behaviour == "ATTACK":
+            if 122 in keys:
+                x_speed = 10
+            elif 115 in keys:
+                x_speed = -10
+
+            if 113 in keys:
+                y_speed = -10
+            elif 100 in keys:
+                y_speed = 10
+
+            if 101 in keys:
+                th_speed = 1
+            elif 97 in keys:
+                th_speed = -1
+
+        behaviour, angles = holowalk(x_speed, y_speed, th_speed, behaviour, params)
+        if behaviour == "ATTACK":
+            attack(params)
+        elif behaviour == "WALK":
+            from_list_to_simu(angles)
