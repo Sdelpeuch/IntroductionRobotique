@@ -154,10 +154,11 @@ def inverseUpdate(controls):
         controls[3], [x, y, z+0.1], p.getQuaternionFromEuler([0, 0, 0]))
     return x, y, z
 
-def from_list_to_simu(list_of_angles):
+last_angles = []
+
+def from_list_to_simu(list_of_angles, dt = 1/1000):
     global last_angles
     for step in list_of_angles:
-        #print("len : ", len(last_angles), len(step))
         smooth_steps = kinematics.make_smooth(step, last_angles, smooth_num=10)
         last_angles = step
         # smooth_steps = [step]
@@ -211,7 +212,8 @@ elif args.mode == "walk" or args.mode == "rotate":
 elif args.mode == "walk-configurable":
     last_angles = 18 * [0]
     controls["angle"] = p.addUserDebugParameter("angle", 0, 360, 0)
-    controls["speed"] = p.addUserDebugParameter("speed (%)", 0, 1, 0)
+    controls["step_dist"] = p.addUserDebugParameter("step distance", 0, 0.3, 0)
+    controls["freq"] = p.addUserDebugParameter("frequence", 100, 10000, 5000)
 
 elif args.mode == "holo":
     last_angles = 18 * [0]
@@ -377,6 +379,10 @@ while True and "walk" not in args.mode and "holo" not in args.mode and "rotate" 
         # )
 
         state = sim.setJoints(targets)
+    elif args.mode == "walk-configurable":
+        angle = p.readUserDebugParameter(controls["angle"])
+        sample = kinematics.walkDistanceAngle(1, angle, 0.15, 0.1, params)
+        from_list_to_simu(sample)
 
     elif args.mode == "attack":
         angles = attack(params)
@@ -393,7 +399,7 @@ while True and "walk" not in args.mode and "holo" not in args.mode and "rotate" 
             set_leg_angles(alphas, leg_id, targets, params)
         state = sim.setJoints(targets)
 
-        time.sleep(2)
+
     sim.tick()
 
 if args.mode == "walk":
@@ -406,6 +412,8 @@ if args.mode == "walk":
     t = time.time()
     print("time to compute all:", time.time() - t)
     from_list_to_simu(sample)
+    # sample = kinematics.walkDistanceAngle(1, math.pi/2, 0.15, 0.1, params)
+    # from_list_to_simu(sample)
 
 elif args.mode == "rotate":
     tick = 1
@@ -419,22 +427,17 @@ elif args.mode == "rotate":
     from_list_to_simu(sample)
 
 elif args.mode == "walk-configurable":
-    def speed_to_params(speed):
-        # speed en %
-        min_step_dist = 0.02
-        max_step_dist = 0.1
-        step_dist = max_step_dist * speed
-        if step_dist < min_step_dist:
-            step_dist = min_step_dist
-        return step_dist
     tick = 1
     targets = {}
     while(1):
-        print("im in while")
         angle = (math.pi/180)*p.readUserDebugParameter(controls["angle"])
-        step_dist = speed_to_params(p.readUserDebugParameter(controls["speed"]))
-        sample = kinematics.walkDistanceAngle(step_dist*2, angle, step_dist, 0.1, params)
-        from_list_to_simu(sample)
+        step_dist = p.readUserDebugParameter(controls["step_dist"])
+        dt_factor = p.readUserDebugParameter(controls["freq"])
+        if step_dist != 0:
+            sample = kinematics.walkDistanceAngle(step_dist*2, angle, step_dist, 0.1, params)
+            from_list_to_simu(sample, 1/dt_factor)
+        else:
+            attack(params)
 
 elif args.mode == "holo":
     tick = 1
