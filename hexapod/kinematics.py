@@ -375,6 +375,61 @@ def computeIKOriented(x, y, z, leg_id, params, verbose=False, extra_angle = 0):
     res = rot.dot(np.array(pos)) + np.array(pos_ini)
     return computeIK(*res)
 
+def rotate(angle, max_step_dist, step_height, params, l_corner = 0.21, l_side = 0.18):
+    res = []
+
+    #perimeters
+    l_leg = params.initLeg[0][0]
+    R_side = l_side + l_leg
+    R_corner = l_corner + l_leg
+    P_side = math.pi * 2 * R_side
+    P_corner = math.pi * 2 * R_corner
+
+    #determine steps distances
+    nb_step = (int)((P_corner * angle / 2*math.pi)// max_step_dist) + 1
+    step_dist = (P_corner * angle / 2*math.pi) / nb_step
+    step_corner = step_dist
+    step_side = P_side / P_corner * step_dist
+
+    for _ in range(nb_step):
+        calculated_angles = []
+        calculated_angles += computeIK(l_corner, 0, params.z + step_height)
+        calculated_angles += computeIK(l_corner, 0, params.z)
+        calculated_angles += computeIK(l_side, 0, params.z + step_height)
+        calculated_angles += computeIK(l_corner, 0, params.z)
+        calculated_angles += computeIK(l_corner, 0, params.z + step_height)
+        calculated_angles += computeIK(l_side, 0, params.z)
+        res += [calculated_angles]
+
+        calculated_angles = []
+        calculated_angles += computeIK(math.cos(step_corner/2)*R_corner - l_corner, math.sin(step_corner/2)*R_corner, params.z)
+        calculated_angles += computeIK(math.cos(step_corner/2)*R_corner - l_corner, -math.sin(step_corner/2)*R_corner, params.z)
+        calculated_angles += computeIK(math.cos(step_side/2)*R_side - l_side, math.sin(step_side/2)*R_side, params.z)
+        calculated_angles += computeIK(math.cos(step_corner/2)*R_corner - l_corner, -math.sin(step_corner/2)*R_corner, params.z)
+        calculated_angles += computeIK(math.cos(step_corner/2)*R_corner - l_corner, math.sin(step_corner/2)*R_corner, params.z)
+        calculated_angles += computeIK(math.cos(step_side/2)*R_side - l_side, -math.sin(step_side/2)*R_side, params.z)
+        res += [calculated_angles]
+
+        calculated_angles = []
+        calculated_angles += computeIK(l_corner, 0, params.z)
+        calculated_angles += computeIK(l_corner, 0, params.z + step_height)
+        calculated_angles += computeIK(l_side, 0, params.z)
+        calculated_angles += computeIK(l_corner, 0, params.z + step_height)
+        calculated_angles += computeIK(l_corner, 0, params.z)
+        calculated_angles += computeIK(l_side, 0, params.z + step_height)
+        res += [calculated_angles]
+
+        calculated_angles = []
+        calculated_angles += computeIK(math.cos(step_corner/2)*R_corner - l_corner, -math.sin(step_corner/2)*R_corner, params.z)
+        calculated_angles += computeIK(math.cos(step_corner/2)*R_corner - l_corner, math.sin(step_corner/2)*R_corner, params.z)
+        calculated_angles += computeIK(math.cos(step_side/2)*R_side - l_side, -math.sin(step_side/2)*R_side, params.z)
+        calculated_angles += computeIK(math.cos(step_corner/2)*R_corner - l_corner, math.sin(step_corner/2)*R_corner, params.z)
+        calculated_angles += computeIK(math.cos(step_corner/2)*R_corner - l_corner, -math.sin(step_corner/2)*R_corner, params.z)
+        calculated_angles += computeIK(math.cos(step_side/2)*R_side - l_side, math.sin(step_side/2)*R_side, params.z)
+        res += [calculated_angles]
+
+    return res
+
 def walkDistanceAngle(dist, angle, step_dist, step_height, params):
     """
     Retourne un tableau contenant une successions des positions clefs des 18 angles 
@@ -516,3 +571,48 @@ def make_smooth(new_angles, last_angles, smooth_num=25):
             new += [last_angles[index]+to_add*i]
         smooth += [new]
     return smooth
+
+
+def compute_pos_jump(period, dt):
+    # Init, flexion, exension, init
+    time = [0, 0.3, 0.4, 0.58] # in %
+    x = [0, 0, 0, 0]
+    y = [0, 0, 0, 0]
+    z = [-0.06, 0.03, -0.3, -0.06]
+    
+    lenght = int(1/dt)
+    # time
+    t = [e * period * lenght for e in time]
+    X = []
+    Y = []
+    Z = []
+
+    step = 0
+    for i in range(1, lenght+1):
+        if step+1 < len(t) and t[step+1] <= i:
+            step += 1
+        X.append(x[step])
+        Y.append(y[step])
+        Z.append(z[step])
+    return X, Y, Z
+
+def jump(params):
+    # period en secondes, laisser à 1.5s
+    period = 1.5
+    dt = .1/period
+    X, Y, Z = compute_pos_jump(period, dt)
+
+    steps = []
+    for i in range(len(X)):
+        step = []
+        for leg in range(1, 7):
+            step += computeIKOriented(X[i], Y[i], Z[i], leg, params, 0)
+        steps.append(step)
+    
+    # print
+    if False:
+        for v in steps:
+            print("1:{:.2f} {:.2f} {:.2f}, 2:{:.2f} {:.2f} {:.2f}, 3:{:.2f} {:.2f} {:.2f}, 4:{:.2f} {:.2f} {:.2f}, 5:{:.2f} {:.2f} {:.2f}, 6:{:.2f} {:.2f} {:.2f}".format(
+                v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12],
+                v[13], v[14], v[15], v[16], v[17]))
+    return steps  
