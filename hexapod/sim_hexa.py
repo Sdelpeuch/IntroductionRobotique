@@ -406,7 +406,6 @@ elif args.mode == "holo":
     t = time.time()
     while True:
         keys = p.getKeyboardEvents()
-        print(keys)
         x_speed, y_speed, th_speed = 0, 0, 0
         if behaviour == "ATTACK":
             if 122 in keys:

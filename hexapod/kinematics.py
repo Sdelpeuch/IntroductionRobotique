@@ -390,7 +390,7 @@ def make_smooth(new_angles, last_angles, smooth_num=25):
 
 def compute_pos_jump(period, dt):
     # Init, flexion, exension, init
-    time = [0, 0.3, 0.4, 0.58] # in %
+    time = [0, 0.25, 0.35, 0.53] # in %
     x = [0, 0, 0, 0]
     y = [0, 0, 0, 0]
     z = [-0.0, 0.11, -2, -0.0]
