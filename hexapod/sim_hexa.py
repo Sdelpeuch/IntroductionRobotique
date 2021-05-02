@@ -82,7 +82,7 @@ def attack(params):
     sim.tick()
 
 def holowalk(x_speed, y_speed, th_speed, behaviour, params):
-    if x_speed == 0 and y_speed == 0 and th_speed == 0:
+    if x_speed == 0 and y_speed == 0 and th_speed == 0 and behaviour != "JUMP":
         return "ATTACK", attack(params)
     elif x_speed != 0 or y_speed != 0:
         if x_speed > 0 and y_speed > 0:
@@ -102,6 +102,9 @@ def holowalk(x_speed, y_speed, th_speed, behaviour, params):
             return "WALK", kinematics.walkDistanceAngle(1, math.pi/2, 0.15, 0.1, params)
         if x_speed == 0 and y_speed < 0:
             return "WALK", kinematics.walkDistanceAngle(1, 3*math.pi/2, 0.15, 0.1, params)
+    elif behaviour == "JUMP":
+        return "JUMP", kinematics.jump(params=params)
+
 
 
 # Updates the values of the dictionnary targets to set 3 angles to a given leg
@@ -448,11 +451,15 @@ elif args.mode == "holo":
             elif 97 in keys:
                 th_speed = -1
 
+            if 32 in keys and keys[32] == 4:
+                behaviour = "JUMP"
+
         behaviour, angles = holowalk(x_speed, y_speed, th_speed, behaviour, params)
         if behaviour == "ATTACK":
             attack(params)
-        elif behaviour == "WALK":
+        elif behaviour == "WALK" or behaviour == "JUMP":
             from_list_to_simu(angles)
+            behaviour = "ATTACK"
 
 
 elif args.mode == "walk-jump":
