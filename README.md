@@ -33,11 +33,11 @@ de temps les fonctions sur l'hexapode sont disponibles uniquement en simulation.
 - Moving the center of the robot to an arbitrary (x, y, z) position (the 6 legs staying on the floor) ✅ `python3 sim_hexa.py -m robot-ik-keyboard`
 - Walking in a straight line (any direction) ✅ `python3 sim_hexa.py -m walk`
 - Rotating without moving the center of the robot (the tip of the legs should never slide on the floor!) ✅ `python3 sim_hexa.py -m rotate`
-- Combining the 2 previous behaviors to create an holonomic walk `python3 sim_hexa.py -m holo`
+- Combining the 2 previous behaviors to create an holonomic walk
 
 ### Fonctions avancées
 
-- Controlling the robot with a keyboard/mouse/whatever ✅
+- Controlling the robot with a keyboard/mouse/whatever ✅ `python3 sim_hexa.py -m holo`
 - Odometry (the robot tracks his position based on the movements he does)
 - Go to X, Y, Theta.
 - Configurable walk (speed, frequency, length, height of the steps. Default body position, etc) ✅ `python3 sim_hexa.py -m walk-configurable`
