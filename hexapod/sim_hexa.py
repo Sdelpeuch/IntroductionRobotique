@@ -55,12 +55,18 @@ def to_pybullet_quaternion(roll, pitch, yaw, degrees=False):
     # print(rot_quat)
     return rot_quat
 
-def say_hello(legs_id, params):
-    t = time.time()
-    if leg_id == 3 or leg_id == 6:
-        return 0.05 * math.cos(t), 0.05 * math.cos(t), 0.1+ 0.5* math.fabs(math.cos(t))
-    else :
-        return 0.01 * math.cos(t), 0.01 * math.cos(t), 0
+def attack(params):
+    alphas=[]
+    for leg_id in range(1, 7):
+        t = time.time()
+        if leg_id == 1 or leg_id == 2 :
+            alphas.append([0.1 * math.fabs(math.tan(t)), 0, 0.1+ 0.2* math.fabs(math.cos(t))])
+        elif leg_id == 3 or leg_id == 6:
+             alphas.append([0.1,  0.01 * math.cos(t),  0.01 * math.cos(t)])
+        else :
+             alphas.append([0.01 * math.cos(t), 0.01 * math.cos(t), 0.01])
+    return alphas
+
 
 
 # Updates the values of the dictionnary targets to set 3 angles to a given leg
@@ -290,13 +296,14 @@ while True and "walk" not in args.mode:
         sample = kinematics.walkDistanceAngle(1, angle, 0.15, 0.1, params)
         from_list_to_simu(sample)
 
-    elif args.mode == "hello":
+    elif args.mode == "attack":
+        angles = attack(params)
         for leg_id in range(1, 7):
-            x, y, z = say_hello(leg_id,params)
+            angle = angles[leg_id-1]
             alphas = kinematics.computeIKOriented(
-                x,
-                y,
-                z,
+                angle[0],
+                angle[1],
+                angle[2],
                 leg_id,
                 params,
                 verbose=False,
