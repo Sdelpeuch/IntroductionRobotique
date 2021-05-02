@@ -55,6 +55,20 @@ def to_pybullet_quaternion(roll, pitch, yaw, degrees=False):
     # print(rot_quat)
     return rot_quat
 
+def attack(params):
+    alphas=[]
+    for leg_id in range(1, 7):
+        t = time.time()
+        if leg_id == 1 or leg_id == 2 :
+            alphas.append([0.1 * math.fabs(math.tan(t)), 0, 0.1+ 0.2* math.fabs(math.cos(t))])
+        elif leg_id == 3 or leg_id == 6:
+             alphas.append([0.1,  0.01 * math.cos(t),  0.01 * math.cos(t)])
+        else :
+             alphas.append([0.01 * math.cos(t), 0.01 * math.cos(t), 0.01])
+    return alphas
+
+
+
 # Updates the values of the dictionnary targets to set 3 angles to a given leg
 def set_leg_angles(alphas, leg_id, targets, params):
     leg = params.legs[leg_id]
@@ -102,9 +116,6 @@ def inverseUpdate(controls):
         controls[3], [x, y, z+0.1], p.getQuaternionFromEuler([0, 0, 0]))
     return x, y, z
 
-last_angles = 18 * [0]
-dt = 1/100000
-
 def from_list_to_simu(list_of_angles):
     global last_angles
     for step in list_of_angles:
@@ -120,8 +131,8 @@ def from_list_to_simu(list_of_angles):
                           smooth_step[index + 2]]
                 set_leg_angles(alphas, leg_id, targets, params)
                 state = sim.setJoints(targets)
-                time.sleep(dt)
                 sim.tick()
+                time.sleep(dt)
 
 if args.mode == "frozen-direct":
     crosses = []
@@ -137,6 +148,12 @@ elif args.mode == "direct":
         print(name)
         if "c1" in name or "thigh" in name or "tibia" in name:
             controls[name] = p.addUserDebugParameter(name, -math.pi, math.pi, 0)
+
+elif args.mode == "robot-ik-keyboard":
+    x_body, y_body, z_body = 0, 0, params.z
+    max_value = 0.05
+    value = 0.001
+
 elif args.mode == "inverse":
     crosses = []
     for i in range(5):
@@ -150,11 +167,20 @@ elif args.mode == "inverse":
 elif args.mode == "mouse":
     keys_z = -0.01
 
-    # test mapping pad
-    # mouse.verboseMapping(1, 0, 10, 0, 100)
-    # mouse.verboseMapping(5, 0, 10, -50, 50)
+elif args.mode == "walk" or args.mode == "rotate":
+    last_angles = 18 * [0]
 
-while True and args.mode != "walk" and args.mode != "rotate":
+elif args.mode == "walk-configurable":
+    last_angles = 18 * [0]
+    controls["angle"] = p.addUserDebugParameter("angle", 0, 360, 0)
+    controls["speed"] = p.addUserDebugParameter("speed (%)", 0, 1, 0)
+
+elif args.mode == "walk-jump":
+    last_angles = 18 * [0]
+
+dt = 1/10000
+
+while True and "walk" not in args.mode and "rotate" not in args.mode:
     tick = 1
     targets = {}
     for name in sim.getJoints():
@@ -193,7 +219,10 @@ while True and args.mode != "walk" and args.mode != "rotate":
             to_pybullet_quaternion(0, 0, 0),
         )
         state = sim.setJoints(targets)
-
+    elif args.mode == "keyboard":
+        # Affcihe le code de la touche appuyée
+        keys = p.getKeyboardEvents()
+        print(keys)
     elif args.mode == "direct":
 
         for name in controls.keys():
@@ -246,6 +275,45 @@ while True and args.mode != "walk" and args.mode != "rotate":
         # )
         state = sim.setJoints(targets)
 
+    elif args.mode == "robot-ik-keyboard":
+        
+        keys = p.getKeyboardEvents()
+
+        if 122 in keys:
+            x_body = min(x_body + value, max_value)
+        if 115 in keys:
+            x_body = max(x_body - value, - max_value)
+        
+        if 113 in keys:
+            y_body = min(y_body + value, max_value)
+        if 100 in keys:
+            y_body = max(y_body - value, - max_value)
+
+        if 101 in keys:
+            z_body = min(z_body + value, params.z + max_value)
+        if 97 in keys:
+            z_body = max(z_body - value, params.z - max_value)
+
+        # print("{}, {}, {}".format(x_body, y_body, z_body))
+        
+        # Use your own IK function
+        for leg_id in range(1, 7):
+            alphas = kinematics.computeIKOriented(
+                x_body,
+                y_body,
+                z_body,
+                leg_id,
+                params,
+                verbose=False,
+            )
+
+            set_leg_angles(alphas, leg_id, targets, params)
+        # sim.setRobotPose(
+        #     [0, 0, 0.5],
+        #     to_pybullet_quaternion(0, 0, 0),
+        # )
+        state = sim.setJoints(targets)
+
     elif args.mode == "mouse":
         # mouse
         mp = mouse.getMousePosition()
@@ -269,6 +337,22 @@ while True and args.mode != "walk" and args.mode != "rotate":
 
         state = sim.setJoints(targets)
 
+    elif args.mode == "attack":
+        angles = attack(params)
+        for leg_id in range(1, 7):
+            angle = angles[leg_id-1]
+            alphas = kinematics.computeIKOriented(
+                angle[0],
+                angle[1],
+                angle[2],
+                leg_id,
+                params,
+                verbose=False,
+            )
+            set_leg_angles(alphas, leg_id, targets, params)
+        state = sim.setJoints(targets)
+
+        time.sleep(2)
     sim.tick()
 
 if args.mode == "walk":
@@ -282,7 +366,7 @@ if args.mode == "walk":
     print("time to compute all:", time.time() - t)
     from_list_to_simu(sample)
 
-if args.mode == "rotate":
+elif args.mode == "rotate":
     tick = 1
     targets = {}
     t = time.time()
@@ -292,4 +376,32 @@ if args.mode == "rotate":
     t = time.time()
     print("time to compute all:", time.time() - t)
     from_list_to_simu(sample)
-    
+
+elif args.mode == "walk-configurable":
+    def speed_to_params(speed):
+        # speed en %
+        min_step_dist = 0.02
+        max_step_dist = 0.1
+        step_dist = max_step_dist * speed
+        if step_dist < min_step_dist:
+            step_dist = min_step_dist
+        return step_dist
+    tick = 1
+    targets = {}
+    while(1):
+        print("im in while")
+        angle = (math.pi/180)*p.readUserDebugParameter(controls["angle"])
+        step_dist = speed_to_params(p.readUserDebugParameter(controls["speed"]))
+        sample = kinematics.walkDistanceAngle(step_dist*2, angle, step_dist, 0.1, params)
+        from_list_to_simu(sample)
+
+elif args.mode == "walk-jump":
+    tick = 1
+    targets = {}
+    while(1):
+        keys = p.getKeyboardEvents()
+        # On trigger le jump que quand on release la barre espace
+        # Pour trigger quand on appuie dessus, mettre keys[32] == 3
+        if 32 in keys and keys[32] == 4:
+            sample = kinematics.jump(params=params)
+            from_list_to_simu(sample)

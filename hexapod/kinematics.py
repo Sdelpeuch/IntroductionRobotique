@@ -438,7 +438,7 @@ def walkDistanceAngle(dist, angle, step_dist, step_height, params):
     res = []
     nb_step = int(dist//step_dist)
 
-    for j in range(nb_step-1):
+    for _ in range(nb_step-1):
         calculated_angles = []
         for i in range(3):
             calculated_angles += computeIKOriented(0, 0, 0, i*2+1, params, extra_angle=angle)
@@ -571,3 +571,48 @@ def make_smooth(new_angles, last_angles, smooth_num=25):
             new += [last_angles[index]+to_add*i]
         smooth += [new]
     return smooth
+
+
+def compute_pos_jump(period, dt):
+    # Init, flexion, exension, init
+    time = [0, 0.3, 0.4, 0.58] # in %
+    x = [0, 0, 0, 0]
+    y = [0, 0, 0, 0]
+    z = [-0.06, 0.03, -0.3, -0.06]
+    
+    lenght = int(1/dt)
+    # time
+    t = [e * period * lenght for e in time]
+    X = []
+    Y = []
+    Z = []
+
+    step = 0
+    for i in range(1, lenght+1):
+        if step+1 < len(t) and t[step+1] <= i:
+            step += 1
+        X.append(x[step])
+        Y.append(y[step])
+        Z.append(z[step])
+    return X, Y, Z
+
+def jump(params):
+    # period en secondes, laisser à 1.5s
+    period = 1.5
+    dt = .1/period
+    X, Y, Z = compute_pos_jump(period, dt)
+
+    steps = []
+    for i in range(len(X)):
+        step = []
+        for leg in range(1, 7):
+            step += computeIKOriented(X[i], Y[i], Z[i], leg, params, 0)
+        steps.append(step)
+    
+    # print
+    if False:
+        for v in steps:
+            print("1:{:.2f} {:.2f} {:.2f}, 2:{:.2f} {:.2f} {:.2f}, 3:{:.2f} {:.2f} {:.2f}, 4:{:.2f} {:.2f} {:.2f}, 5:{:.2f} {:.2f} {:.2f}, 6:{:.2f} {:.2f} {:.2f}".format(
+                v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12],
+                v[13], v[14], v[15], v[16], v[17]))
+    return steps  
