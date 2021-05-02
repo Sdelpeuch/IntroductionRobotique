@@ -388,9 +388,9 @@ elif args.mode == "rotate":
     tick = 1
     targets = {}
     t = time.time()
-    sample = kinematics.rotate(math.pi / 2, 0.1, 0.1, params)
+    sample = kinematics.rotate(2*math.pi, 0.15, 0.1, params)
     print("time to compute :", time.time() - t)
-    print("sample : ", sample)
+    #print("sample : ", sample)
     t = time.time()
     print("time to compute all:", time.time() - t)
     from_list_to_simu(sample)

@@ -269,9 +269,17 @@ def computeIKOriented(x, y, z, leg_id, params, verbose=False, extra_angle = 0):
     res = rot.dot(np.array(pos)) + np.array(pos_ini)
     return computeIK(*res)
 
+def angle_offset(tab, angle):
+    tab[0] += angle
+    return tab
 
-def rotate(angle, max_step_dist, step_height, params, l_corner = 0.21, l_side = 0.18):
+def rotate(angle, max_step_dist, step_height, params, l_corner = 0.13628, l_side = 0.10350, alpha = 0.322):
     res = []
+
+    sign = 1
+    if (angle < 0): 
+        angle = -angle
+        sign = -1
 
     #perimeters
     l_leg = params.initLeg[0][0]
@@ -281,47 +289,49 @@ def rotate(angle, max_step_dist, step_height, params, l_corner = 0.21, l_side = 
     P_corner = math.pi * 2 * R_corner
 
     #determine steps distances
-    nb_step = (int)((P_corner * angle / 2*math.pi)// max_step_dist) + 1
-    step_dist = (P_corner * angle / 2*math.pi) / nb_step
+    dist = P_corner * angle / (2*math.pi)
+    nb_step = (int)(dist // max_step_dist) + 1
+    step_dist = dist / nb_step
     step_corner = step_dist
     step_side = P_side / P_corner * step_dist
-
-    for _ in range(nb_step):
+    
+    for _ in range(2*nb_step):
         calculated_angles = []
-        calculated_angles += computeIK(l_corner, 0, params.z + step_height)
-        calculated_angles += computeIK(l_corner, 0, params.z)
-        calculated_angles += computeIK(l_side, 0, params.z + step_height)
-        calculated_angles += computeIK(l_corner, 0, params.z)
-        calculated_angles += computeIK(l_corner, 0, params.z + step_height)
-        calculated_angles += computeIK(l_side, 0, params.z)
+        calculated_angles += angle_offset(computeIK(l_leg, 0, params.z + step_height), alpha)
+        calculated_angles += angle_offset(computeIK(l_leg, 0, params.z), -alpha)
+        calculated_angles += computeIK(l_leg, 0, params.z + step_height)
+        calculated_angles += angle_offset(computeIK(l_leg, 0, params.z), alpha)
+        calculated_angles += angle_offset(computeIK(l_leg, 0, params.z + step_height), -alpha)
+        calculated_angles += computeIK(l_leg, 0, params.z)
         res += [calculated_angles]
 
         calculated_angles = []
-        calculated_angles += computeIK(math.cos(step_corner/2)*R_corner - l_corner, math.sin(step_corner/2)*R_corner, params.z)
-        calculated_angles += computeIK(math.cos(step_corner/2)*R_corner - l_corner, -math.sin(step_corner/2)*R_corner, params.z)
-        calculated_angles += computeIK(math.cos(step_side/2)*R_side - l_side, math.sin(step_side/2)*R_side, params.z)
-        calculated_angles += computeIK(math.cos(step_corner/2)*R_corner - l_corner, -math.sin(step_corner/2)*R_corner, params.z)
-        calculated_angles += computeIK(math.cos(step_corner/2)*R_corner - l_corner, math.sin(step_corner/2)*R_corner, params.z)
-        calculated_angles += computeIK(math.cos(step_side/2)*R_side - l_side, -math.sin(step_side/2)*R_side, params.z)
+        calculated_angles += angle_offset(computeIK(math.cos(step_corner/2)*R_corner - l_corner, sign*math.sin(step_corner/2)*R_corner, params.z), alpha)
+        calculated_angles += angle_offset(computeIK(math.cos(step_corner/2)*R_corner - l_corner, -sign*math.sin(step_corner/2)*R_corner, params.z), -alpha)
+        calculated_angles += computeIK(math.cos(step_side/2)*R_side - l_side, sign*math.sin(step_side/2)*R_side, params.z)
+        calculated_angles += angle_offset(computeIK(math.cos(step_corner/2)*R_corner - l_corner, -sign*math.sin(step_corner/2)*R_corner, params.z), alpha)
+        calculated_angles += angle_offset(computeIK(math.cos(step_corner/2)*R_corner - l_corner, sign*math.sin(step_corner/2)*R_corner, params.z), -alpha)
+        calculated_angles += computeIK(math.cos(step_side/2)*R_side - l_side, -sign*math.sin(step_side/2)*R_side, params.z)
         res += [calculated_angles]
 
         calculated_angles = []
-        calculated_angles += computeIK(l_corner, 0, params.z)
-        calculated_angles += computeIK(l_corner, 0, params.z + step_height)
-        calculated_angles += computeIK(l_side, 0, params.z)
-        calculated_angles += computeIK(l_corner, 0, params.z + step_height)
-        calculated_angles += computeIK(l_corner, 0, params.z)
-        calculated_angles += computeIK(l_side, 0, params.z + step_height)
+        calculated_angles += angle_offset(computeIK(l_leg, 0, params.z), alpha)
+        calculated_angles += angle_offset(computeIK(l_leg, 0, params.z + step_height), -alpha)
+        calculated_angles += computeIK(l_leg, 0, params.z)
+        calculated_angles += angle_offset(computeIK(l_leg, 0, params.z + step_height), alpha)
+        calculated_angles += angle_offset(computeIK(l_leg, 0, params.z), -alpha)
+        calculated_angles += computeIK(l_leg, 0, params.z + step_height)
         res += [calculated_angles]
 
         calculated_angles = []
-        calculated_angles += computeIK(math.cos(step_corner/2)*R_corner - l_corner, -math.sin(step_corner/2)*R_corner, params.z)
-        calculated_angles += computeIK(math.cos(step_corner/2)*R_corner - l_corner, math.sin(step_corner/2)*R_corner, params.z)
-        calculated_angles += computeIK(math.cos(step_side/2)*R_side - l_side, -math.sin(step_side/2)*R_side, params.z)
-        calculated_angles += computeIK(math.cos(step_corner/2)*R_corner - l_corner, math.sin(step_corner/2)*R_corner, params.z)
-        calculated_angles += computeIK(math.cos(step_corner/2)*R_corner - l_corner, -math.sin(step_corner/2)*R_corner, params.z)
-        calculated_angles += computeIK(math.cos(step_side/2)*R_side - l_side, math.sin(step_side/2)*R_side, params.z)
+        calculated_angles += angle_offset(computeIK(math.cos(step_corner/2)*R_corner - l_corner, -sign*math.sin(step_corner/2)*R_corner, params.z), alpha)
+        calculated_angles += angle_offset(computeIK(math.cos(step_corner/2)*R_corner - l_corner, sign*math.sin(step_corner/2)*R_corner, params.z), -alpha)
+        calculated_angles += computeIK(math.cos(step_side/2)*R_side - l_side, -sign*math.sin(step_side/2)*R_side, params.z)
+        calculated_angles += angle_offset(computeIK(math.cos(step_corner/2)*R_corner - l_corner, sign*math.sin(step_corner/2)*R_corner, params.z), alpha)
+        calculated_angles += angle_offset(computeIK(math.cos(step_corner/2)*R_corner - l_corner, -sign*math.sin(step_corner/2)*R_corner, params.z), -alpha)
+        calculated_angles += computeIK(math.cos(step_side/2)*R_side - l_side, sign*math.sin(step_side/2)*R_side, params.z)
         res += [calculated_angles]
+
     res += [toIniPos(params)]
 
     return res
