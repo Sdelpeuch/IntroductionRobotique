@@ -381,24 +381,55 @@ def walkDistanceAngle(dist, angle, step_dist, step_height, params):
     des steppers permettant la marche sur la distance dist avec un angle donné
     """
     res = []
-    res += [toIniPos(params)]
-
     nb_step = int(dist//step_dist)
-    reste = dist - (nb_step*step_dist)
-    custom_print(res, 0)
 
-    if(nb_step != 0):
-        # first half-step
+    for j in range(nb_step-1):
         calculated_angles = []
         for i in range(3):
-            calculated_angles += computeIKOriented(step_dist/4, 0, step_height, i*2+1, params, extra_angle=angle)
-            calculated_angles += computeIKOriented(-step_dist/4, 0, 0, i*2+2, params, extra_angle=angle)
+            calculated_angles += computeIKOriented(0, 0, 0, i*2+1, params, extra_angle=angle)
+            calculated_angles += computeIKOriented(0, 0, step_height, i*2+2, params, extra_angle=angle)
+        res += [calculated_angles]
+        calculated_angles = []
+        for i in range(3):
+            calculated_angles += computeIKOriented(-step_dist/2, 0, 0, i*2+1, params, extra_angle=angle)
+            calculated_angles += computeIKOriented(step_dist/2, 0, 0, i*2+2, params, extra_angle=angle)
+        res += [calculated_angles]
+        calculated_angles = []
+        for i in range(3):
+            calculated_angles += computeIKOriented(0, 0, step_height, i*2+1, params, extra_angle=angle)
+            calculated_angles += computeIKOriented(0, 0, 0, i*2+2, params, extra_angle=angle)
         res += [calculated_angles]
         calculated_angles = []
         for i in range(3):
             calculated_angles += computeIKOriented(step_dist/2, 0, 0, i*2+1, params, extra_angle=angle)
             calculated_angles += computeIKOriented(-step_dist/2, 0, 0, i*2+2, params, extra_angle=angle)
         res += [calculated_angles]
+
+    return res
+
+
+def oldWalkDistanceAngle(dist, angle, step_dist, step_height, params):
+    """
+    Retourne un tableau contenant une successions des positions clefs des 18 angles 
+    des steppers permettant la marche sur la distance dist avec un angle donné
+    """
+    res = []
+    res += [toIniPos(params)]
+
+    nb_step = int(dist//step_dist)
+
+    if(nb_step != 0):
+        # first half-step
+        # calculated_angles = []
+        # for i in range(3):
+        #     calculated_angles += computeIKOriented(step_dist/4, 0, step_height, i*2+1, params, extra_angle=angle)
+        #     calculated_angles += computeIKOriented(-step_dist/4, 0, 0, i*2+2, params, extra_angle=angle)
+        # res += [calculated_angles]
+        # calculated_angles = []
+        # for i in range(3):
+        #     calculated_angles += computeIKOriented(step_dist/2, 0, 0, i*2+1, params, extra_angle=angle)
+        #     calculated_angles += computeIKOriented(-step_dist/2, 0, 0, i*2+2, params, extra_angle=angle)
+        # res += [calculated_angles]
 
         # steps (nb_steps-1)
         for j in range(nb_step-1):
@@ -424,45 +455,41 @@ def walkDistanceAngle(dist, angle, step_dist, step_height, params):
             res += [calculated_angles]
 
         # last half-step
-        calculated_angles = []
-        for i in range(3):
-            calculated_angles += computeIKOriented(step_dist/4, 0, 0, i*2+1, params, extra_angle=angle)
-            calculated_angles += computeIKOriented(-step_dist/4, 0, step_height, i*2+2, params, extra_angle=angle)
-        res += [calculated_angles]
-        calculated_angles = []
-        for i in range(3):
-            calculated_angles += computeIKOriented(0, 0, 0, i*2+1, params, extra_angle=angle)
-            calculated_angles += computeIKOriented(0, 0, 0, i*2+2, params, extra_angle=angle)
-        res += [calculated_angles]
+        # calculated_angles = []
+        # for i in range(3):
+        #     calculated_angles += computeIKOriented(step_dist/4, 0, 0, i*2+1, params, extra_angle=angle)
+        #     calculated_angles += computeIKOriented(-step_dist/4, 0, step_height, i*2+2, params, extra_angle=angle)
+        # res += [calculated_angles]
+        # calculated_angles = []
+        # for i in range(3):
+        #     calculated_angles += computeIKOriented(0, 0, 0, i*2+1, params, extra_angle=angle)
+        #     calculated_angles += computeIKOriented(0, 0, 0, i*2+2, params, extra_angle=angle)
+        # res += [calculated_angles]
 
-    #reste
-    calculated_angles = []
-    for i in range(3):
-        calculated_angles += computeIKOriented(reste/4, 0, step_height, i*2+1, params, extra_angle=angle)
-        calculated_angles += computeIKOriented(-reste/4, 0, 0, i*2+2, params, extra_angle=angle)
-    res += [calculated_angles]
-    calculated_angles = []
-    for i in range(3):
-        calculated_angles += computeIKOriented(reste/2, 0, 0, i*2+1, params, extra_angle=angle)
-        calculated_angles += computeIKOriented(-reste/2, 0, 0, i*2+2, params, extra_angle=angle)
-    res += [calculated_angles]
-    calculated_angles = []
-    for i in range(3):
-        calculated_angles += computeIKOriented(reste/4, 0, 0, i*2+1, params, extra_angle=angle)
-        calculated_angles += computeIKOriented(-reste/4, 0, step_height, i*2+2, params, extra_angle=angle)
-    res += [calculated_angles]
-    calculated_angles = []
-    for i in range(3):
-        calculated_angles += computeIKOriented(0, 0, 0, i*2+1, params, extra_angle=angle)
-        calculated_angles += computeIKOriented(0, 0, 0, i*2+2, params, extra_angle=angle)
-    res += [calculated_angles]
-    flat = []
-    for step in res:
-        # print("step", step)
-        step = np.array(step).flatten()
-        # print(step)
-        flat += [step]
-    return flat
+    #reste 
+    # if (reste > eps):
+    #     calculated_angles = []
+    #     for i in range(3):
+    #         calculated_angles += computeIKOriented(reste/4, 0, step_height, i*2+1, params, extra_angle=angle)
+    #         calculated_angles += computeIKOriented(-reste/4, 0, 0, i*2+2, params, extra_angle=angle)
+    #     res += [calculated_angles]
+    #     calculated_angles = []
+    #     for i in range(3):
+    #         calculated_angles += computeIKOriented(reste/2, 0, 0, i*2+1, params, extra_angle=angle)
+    #         calculated_angles += computeIKOriented(-reste/2, 0, 0, i*2+2, params, extra_angle=angle)
+    #     res += [calculated_angles]
+    #     calculated_angles = []
+    #     for i in range(3):
+    #         calculated_angles += computeIKOriented(reste/4, 0, 0, i*2+1, params, extra_angle=angle)
+    #         calculated_angles += computeIKOriented(-reste/4, 0, step_height, i*2+2, params, extra_angle=angle)
+    #     res += [calculated_angles]
+    #     calculated_angles = []
+    #     for i in range(3):
+    #         calculated_angles += computeIKOriented(0, 0, 0, i*2+1, params, extra_angle=angle)
+    #         calculated_angles += computeIKOriented(0, 0, 0, i*2+2, params, extra_angle=angle)
+    #     res += [calculated_angles]
+    
+    return res
 
 def walkXY(x_dist, y_dist, step_dist, step_height, params):
     """
@@ -476,7 +503,7 @@ def walkXY(x_dist, y_dist, step_dist, step_height, params):
 def toIniPos(params):
     res = []
     for i in range(1, 7):
-        res += [computeIKOriented(0, 0, 0, i, params)]
+        res += computeIKOriented(0, 0, 0, i, params)
     return res
 
 

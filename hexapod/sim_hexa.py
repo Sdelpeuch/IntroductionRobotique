@@ -278,7 +278,7 @@ if args.mode == "walk":
     tick = 1
     targets = {}
     t = time.time()
-    sample = kinematics.walkDistanceAngle(1, 0, 0.2, 0.1, params)
+    sample = kinematics.walkDistanceAngle(2, 0, 0.15, 0.1, params)
     print("time to compute :", time.time() - t)
     # print("sample : ", sample)
     t = time.time()
