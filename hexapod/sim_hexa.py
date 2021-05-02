@@ -285,10 +285,6 @@ while True and "walk" not in args.mode:
         # )
 
         state = sim.setJoints(targets)
-    elif args.mode == "walk-configurable":
-        angle = p.readUserDebugParameter(controls["angle"])
-        sample = kinematics.walkDistanceAngle(1, angle, 0.15, 0.1, params)
-        from_list_to_simu(sample)
 
     elif args.mode == "hello":
         for leg_id in range(1, 7):
