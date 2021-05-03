@@ -25,7 +25,7 @@ commande `python3 simulator.py <name>`
 ## Projet : Hexapode
 
 L'objectif du projet est de passer ce que nous avons fait sur un robot hexapode en simulation puis en réel. Par manque
-de temps les fonctions sur l'hexapode sont disponibles uniquement en simulation.
+de temps et à cause d'une incompréhension sur les constantes du robot. Les fonctions sur l'hexapode en virtuel ne sont pas toute disponibles en réel (en réel nous pouvons faire bouger le centre du robot avec les 6 pattes fixes et un debut très instable de marche est disponible)
 
 ### Fonctions de base
 
