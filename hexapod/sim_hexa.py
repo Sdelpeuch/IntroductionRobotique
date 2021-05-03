@@ -416,14 +416,14 @@ elif args.mode == "holo":
         keys = p.getKeyboardEvents()
         x, y, th_speed = 0, 0, 0
         if behaviour == "ATTACK":
-            if 122 in keys:
+            if 122 in keys or 65297 in keys:
                 x = 10
-            elif 115 in keys:
+            elif 115 in keys or 65298 in keys:
                 x = -10
 
-            if 113 in keys:
+            if 113 in keys or 65295 in keys:
                 y = 10
-            elif 100 in keys:
+            elif 100 in keys or 65296 in keys:
                 y = -10
 
             if 101 in keys:
