@@ -110,9 +110,9 @@ def holowalk(x_speed, y_speed, behaviour, params):
     elif behaviour == "JUMP":
         return "JUMP", kinematics.jump(params=params)
     elif behaviour == "ROTATE_R":
-        return "ROTATE_R", kinematics.rotate(0.15*2, 0.15, 0.2, params)
+        return "ROTATE_R", kinematics.rotate(0.15*2, 0.15, 0.2, params, alpha=0)
     elif behaviour == "ROTATE_L":
-        return "ROTATE_L", kinematics.rotate(-0.15*2, 0.15, 0.2, params)
+        return "ROTATE_L", kinematics.rotate(-0.15*2, 0.15, 0.2, params, alpha=0)
 
 # Updates the values of the dictionnary targets to set 3 angles to a given leg
 def set_leg_angles(alphas, leg_id, targets, params):
@@ -422,14 +422,14 @@ elif args.mode == "holo":
                 x = -10
 
             if 113 in keys:
-                y = -10
-            elif 100 in keys:
                 y = 10
+            elif 100 in keys:
+                y = -10
 
             if 101 in keys:
-                behaviour = "ROTATE_R"
-            elif 97 in keys:
                 behaviour = "ROTATE_L"
+            elif 97 in keys:
+                behaviour = "ROTATE_R"
 
             if 32 in keys and keys[32] == 4:
                 behaviour = "JUMP"

@@ -342,7 +342,8 @@ def walkDistanceAngle(dist, angle, step_dist, step_height, params):
     Retourne un tableau contenant une successions des positions clefs des 18 angles 
     des steppers permettant la marche sur la distance dist avec un angle donné
     """
-    res = [toIniPos(params)]
+    res = []
+    #res += [toIniPos(params)]
     nb_step = int(dist//step_dist)
 
     for _ in range(nb_step-1):
