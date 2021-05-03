@@ -79,32 +79,27 @@ def main():
             print("Closing")
 
         elif args.mode == "sinus":
-            pi = math.pi
-            i = 0
             while True:
-                for k,v in robot.legs.items():
-                    theta1, theta2, theta3 = kinematics.computeIKOriented(0,0 , i, 1, robot.params)
-                    v[0].goal_position = theta1
-                    v[1].goal_position = theta2
-                    v[2].goal_position = theta3
-                    print(theta1, theta2, theta3)
-                    i += 1
-                robot.smooth_tick_read_and_write(3, verbose=False)
+                t = time.time()
+                for leg_id in range(1, 7):
+                    angle=[0.05 * math.sin(t), 0.05 * math.cos(t), -0.01]
+                    alphas = kinematics.computeIKOriented(
+                        angle[0],
+                        angle[1],
+                        angle[2],
+                        leg_id,
+                        robot.params,
+                        verbose=False,
+                    )
+                    v = robot.legs[leg_id]
+                    v[0].goal_position = alphas[0]*10
+                    v[1].goal_position = alphas[1]*10
+                    v[2].goal_position = alphas[2]*10
+                    print(v)
+                    time.sleep(1/1000)
+                robot.smooth_tick_read_and_write(0.5, verbose=False)
 
-        else :
-            v = robot.legs[1]
-            theta1, theta2, theta3 = kinematics.computeIKOriented(0.35,0.17,0.01,1,robot.params)
-            v[0].goal_position = theta1
-            v[1].goal_position = theta2
-            v[2].goal_position = theta3
-            print(theta1,theta2,theta3)
-            robot.smooth_tick_read_and_write(3, verbose=False)
-            theta1, theta2, theta3 = kinematics.computeIKOriented(100, 500, 0.01, 1, robot.params)
-            v[0].goal_position = theta1
-            v[1].goal_position = theta2
-            v[2].goal_position = theta3
-            print(theta1, theta2, theta3)
-            robot.smooth_tick_read_and_write(3, verbose=False)
+
     except Exception as e:
         track = traceback.format_exc()
         print(track)
